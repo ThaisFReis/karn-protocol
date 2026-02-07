@@ -12,7 +12,7 @@
 ## Installation
 
 ```bash
-npm install @karn/protocol-sdk @stellar/stellar-sdk
+npm install @karn_lat/protocol-sdk @stellar/stellar-sdk
 ```
 
 ## Quick Start
@@ -23,7 +23,7 @@ import {
   GovernorClient, 
   TreasuryClient, 
   rpc 
-} from '@karn/protocol-sdk';
+} from '@karn_lat/protocol-sdk';
 
 // Configuration
 const NETWORK_PASSPHRASE = "Test SDF Network ; September 2015";
@@ -57,7 +57,7 @@ main();
 Wrap your app in `KarnProvider`:
 
 ```tsx
-import { KarnProvider } from '@karn/protocol-sdk';
+import { KarnProvider } from '@karn_lat/protocol-sdk';
 
 const config = {
   networkPassphrase: "...",

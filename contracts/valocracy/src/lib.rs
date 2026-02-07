@@ -457,6 +457,7 @@ impl ValocracyContract {
 
     /// Calculate Mana with decay.
     /// Formula: Mana = floor + (extra_level * time_remaining) / VACANCY_PERIOD
+    fn calculate_mana(level: u64, permanent_level: u64, expiry: u64, current_time: u64) -> u64 {
         if level == 0 {
             return 0;
         }
@@ -652,6 +653,14 @@ impl ValocracyContract {
         let current_time = env.ledger().timestamp();
         let new_level = current_level + rarity;
         let new_expiry = current_time + VACANCY_PERIOD;
+        let current_verified = current_stats.as_ref().map_or(false, |s| s.verified);
+
+        let new_stats = UserStats {
+            level: new_level,
+            permanent_level: current_permanent,  // Preserve existing permanent level
+            expiry: new_expiry,
+            verified: current_verified,
+        };
 
         set_user_stats(env, account, &new_stats);
 

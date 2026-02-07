@@ -196,7 +196,7 @@ After understanding this example:
 
 1. **Try Badge Viewer** — `../badge-viewer/` (React + TypeScript)
 2. **Build Mana Calculator** — `../mana-calculator/` (decay visualization)
-3. **Explore SDK** — Use `@karn/protocol-sdk` for easier integration
+3. **Explore SDK** — Use `@karn_lat/protocol-sdk` for easier integration
 
 ## Resources
 

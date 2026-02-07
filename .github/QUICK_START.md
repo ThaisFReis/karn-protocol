@@ -72,7 +72,7 @@ npm run lint               # Lint (if exists)
 
 3. **Verify Release**
    - Check GitHub Releases for new release
-   - Verify npm: `npm view @karn/protocol-sdk versions`
+   - Verify npm: `npm view @karn_lat/protocol-sdk versions`
    - Download and verify checksums
 
 ### Version Naming

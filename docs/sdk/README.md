@@ -1,16 +1,16 @@
 # SDK Reference
 
-Documentation for the `@karn/protocol-sdk` TypeScript library.
+Documentation for the `@karn_lat/protocol-sdk` TypeScript library.
 
 ## Installation
 
 ```bash
-npm install @karn/protocol-sdk
+npm install @karn_lat/protocol-sdk
 ```
 
 ## Usage
 
 ```typescript
-import { KarnSDK } from '@karn/protocol-sdk';
+import { KarnSDK } from '@karn_lat/protocol-sdk';
 // ...
 ```

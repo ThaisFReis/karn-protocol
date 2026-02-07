@@ -139,7 +139,7 @@ To publish to npm, create an access token:
 3. **Generate New Token** → Select **Automation**
 4. Copy the token and add as `NPM_TOKEN` secret
 
-**Important:** The SDK package name is `@karn/protocol-sdk`. Ensure you have:
+**Important:** The SDK package name is `@karn_lat/protocol-sdk`. Ensure you have:
 - Created the `@karn` organization on npm
 - Added yourself as a maintainer
 - Set package to public: `"publishConfig": { "access": "public" }`
@@ -246,7 +246,7 @@ Add these to your main README.md:
 **Solutions:**
 1. Verify `NPM_TOKEN` is set correctly
 2. Check token has automation permissions
-3. Verify package name `@karn/protocol-sdk` is available
+3. Verify package name `@karn_lat/protocol-sdk` is available
 4. Ensure you're a maintainer of `@karn` org
 
 ### WASM Size Limit Exceeded

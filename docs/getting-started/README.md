@@ -186,9 +186,9 @@ After registration, you'll see:
 ### Step 1: Install the SDK
 
 ```bash
-npm install @karn/protocol-sdk
+npm install @karn_lat/protocol-sdk
 # or
-yarn add @karn/protocol-sdk
+yarn add @karn_lat/protocol-sdk
 ```
 
 ### Step 2: Set Up Your Project
@@ -198,7 +198,7 @@ yarn add @karn/protocol-sdk
 mkdir my-karn-app
 cd my-karn-app
 npm init -y
-npm install @karn/protocol-sdk @stellar/stellar-sdk
+npm install @karn_lat/protocol-sdk @stellar/stellar-sdk
 npm install -D typescript @types/node
 npx tsc --init
 ```
@@ -208,13 +208,13 @@ npx tsc --init
 mkdir my-karn-app
 cd my-karn-app
 npm init -y
-npm install @karn/protocol-sdk @stellar/stellar-sdk
+npm install @karn_lat/protocol-sdk @stellar/stellar-sdk
 ```
 
 ### Step 3: Connect to a Wallet
 
 ```typescript
-import { WalletManager, WalletType } from '@karn/protocol-sdk';
+import { WalletManager, WalletType } from '@karn_lat/protocol-sdk';
 
 // Create wallet manager
 const walletManager = new WalletManager();
@@ -235,7 +235,7 @@ try {
 ### Step 4: Query Mana and Level
 
 ```typescript
-import { ValocracyClient } from '@karn/protocol-sdk';
+import { ValocracyClient } from '@karn_lat/protocol-sdk';
 import * as StellarSdk from '@stellar/stellar-sdk';
 
 // Initialize client
@@ -289,7 +289,7 @@ console.log('Transaction hash:', result.hash);
 ### Step 6: Use React Hooks (Optional)
 
 ```tsx
-import { useMultiWallet, useValocracy } from '@karn/protocol-sdk';
+import { useMultiWallet, useValocracy } from '@karn_lat/protocol-sdk';
 
 function MyComponent() {
   const { state, connect, disconnect } = useMultiWallet();
@@ -337,7 +337,7 @@ function MyComponent() {
 **Solution**: Check network (testnet vs mainnet), ensure sufficient XLM balance
 
 **Issue**: "Module not found"
-**Solution**: Ensure proper ESM import syntax (`import { ... } from '@karn/protocol-sdk'`)
+**Solution**: Ensure proper ESM import syntax (`import { ... } from '@karn_lat/protocol-sdk'`)
 
 ---
 
@@ -748,7 +748,7 @@ Runs 18+ automated tests to verify:
    - Build with `mana-calculator/` (decay logic)
 
 3. **Use SDK** — [`../../sdk/README.md`](../../sdk/README.md)
-   - Install: `npm install @karn/protocol-sdk`
+   - Install: `npm install @karn_lat/protocol-sdk`
    - React hooks for easy integration
    - TypeScript support
 

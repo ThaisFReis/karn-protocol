@@ -25,7 +25,7 @@ See [Getting Started](docs/getting-started/quick-start.md).
 The protocol consists of three core contracts:
 
 1.  **Valocracy**: Manages Soulbound Tokens (SBTs), identity, and Mana calculation.
-2.  **Governor**: Handles proposal creation, voting logic, and execution execution.
+2.  **Governor**: Handles proposal creation, voting logic, and execution.
 3.  **Treasury**: A transparent vault for funds, supporting scholarship escrows.
 
 ## Documentation

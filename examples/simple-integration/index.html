@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Karn Protocol - Simple Integration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .status.disconnected {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .status.connected {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        button:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .mana-display {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            color: white;
+            margin: 20px 0;
+        }
+
+        .mana-value {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .mana-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+        }
+
+        .truncate {
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌟 Karn Protocol</h1>
+        <p class="subtitle">Simple Integration Example</p>
+
+        <div id="status" class="status disconnected">
+            <strong>Status:</strong> Not connected
+        </div>
+
+        <button id="connectBtn" onclick="connectWallet()">
+            Connect Freighter Wallet
+        </button>
+
+        <div id="userInfo" style="display: none;">
+            <div class="mana-display">
+                <div class="mana-label">Your Voting Power</div>
+                <div class="mana-value" id="manaValue">-</div>
+                <div class="mana-label">Mana</div>
+            </div>
+
+            <div class="info-card">
+                <div class="info-row">
+                    <span class="info-label">Address</span>
+                    <span class="info-value truncate" id="address" title="">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Total Level</span>
+                    <span class="info-value" id="level">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Permanent Level</span>
+                    <span class="info-value" id="permanentLevel">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Network</span>
+                    <span class="info-value">Testnet</span>
+                </div>
+            </div>
+
+            <button onclick="disconnectWallet()" style="margin-top: 20px; background: #dc3545;">
+                Disconnect
+            </button>
+        </div>
+    </div>
+
+    <script type="module">
+        // Configuration
+        const CONFIG = {
+            networkPassphrase: 'Test SDF Network ; September 2015',
+            rpcUrl: 'https://soroban-testnet.stellar.org',
+            valocracyContract: 'REDACTED_CONTRACT_ID_VALOCRACY',
+        };
+
+        // Import Stellar SDK
+        import * as StellarSdk from 'https://cdn.jsdelivr.net/npm/@stellar/stellar-sdk@12/+esm';
+
+        // Global state
+        let walletAddress = null;
+        let rpcServer = new StellarSdk.rpc.Server(CONFIG.rpcUrl);
+
+        // Connect wallet
+        window.connectWallet = async function() {
+            const btn = document.getElementById('connectBtn');
+            const status = document.getElementById('status');
+
+            try {
+                // Check if Freighter is installed
+                if (!window.freighter) {
+                    throw new Error('Freighter wallet not installed. Visit freighter.app');
+                }
+
+                btn.disabled = true;
+                btn.innerHTML = '<span class="loading"></span> Connecting...';
+
+                // Request public key from Freighter
+                const publicKey = await window.freighter.getPublicKey();
+
+                if (!publicKey) {
+                    throw new Error('User rejected connection');
+                }
+
+                walletAddress = publicKey;
+
+                // Update UI
+                status.className = 'status connected';
+                status.innerHTML = '<strong>Status:</strong> Connected to Freighter';
+                btn.style.display = 'none';
+                document.getElementById('userInfo').style.display = 'block';
+                document.getElementById('address').textContent = publicKey.slice(0, 10) + '...' + publicKey.slice(-10);
+                document.getElementById('address').title = publicKey;
+
+                // Fetch user data
+                await fetchUserData();
+
+            } catch (error) {
+                console.error('Connection error:', error);
+                status.className = 'status error';
+                status.innerHTML = '<strong>Error:</strong> ' + error.message;
+                btn.disabled = false;
+                btn.textContent = 'Connect Freighter Wallet';
+            }
+        };
+
+        // Disconnect wallet
+        window.disconnectWallet = function() {
+            walletAddress = null;
+            document.getElementById('status').className = 'status disconnected';
+            document.getElementById('status').innerHTML = '<strong>Status:</strong> Not connected';
+            document.getElementById('connectBtn').style.display = 'block';
+            document.getElementById('userInfo').style.display = 'none';
+        };
+
+        // Fetch user data from contract
+        async function fetchUserData() {
+            try {
+                // Get account info
+                const account = await rpcServer.getAccount(walletAddress);
+
+                // Build contract call for get_votes
+                const contract = new StellarSdk.Contract(CONFIG.valocracyContract);
+                const tx = new StellarSdk.TransactionBuilder(account, {
+                    fee: StellarSdk.BASE_FEE,
+                    networkPassphrase: CONFIG.networkPassphrase,
+                })
+                .addOperation(contract.call('get_votes',
+                    StellarSdk.Address.fromString(walletAddress).toScVal()
+                ))
+                .setTimeout(30)
+                .build();
+
+                // Simulate transaction to get result
+                const simulation = await rpcServer.simulateTransaction(tx);
+
+                if (StellarSdk.rpc.Api.isSimulationSuccess(simulation)) {
+                    const mana = StellarSdk.scValToBigInt(simulation.result.retval);
+                    document.getElementById('manaValue').textContent = mana.toString();
+                }
+
+                // Get level
+                const levelTx = new StellarSdk.TransactionBuilder(account, {
+                    fee: StellarSdk.BASE_FEE,
+                    networkPassphrase: CONFIG.networkPassphrase,
+                })
+                .addOperation(contract.call('level_of',
+                    StellarSdk.Address.fromString(walletAddress).toScVal()
+                ))
+                .setTimeout(30)
+                .build();
+
+                const levelSim = await rpcServer.simulateTransaction(levelTx);
+                if (StellarSdk.rpc.Api.isSimulationSuccess(levelSim)) {
+                    const level = StellarSdk.scValToBigInt(levelSim.result.retval);
+                    document.getElementById('level').textContent = level.toString();
+                }
+
+                // Get permanent level
+                const permTx = new StellarSdk.TransactionBuilder(account, {
+                    fee: StellarSdk.BASE_FEE,
+                    networkPassphrase: CONFIG.networkPassphrase,
+                })
+                .addOperation(contract.call('permanent_level_of',
+                    StellarSdk.Address.fromString(walletAddress).toScVal()
+                ))
+                .setTimeout(30)
+                .build();
+
+                const permSim = await rpcServer.simulateTransaction(permTx);
+                if (StellarSdk.rpc.Api.isSimulationSuccess(permSim)) {
+                    const permLevel = StellarSdk.scValToBigInt(permSim.result.retval);
+                    document.getElementById('permanentLevel').textContent = permLevel.toString();
+                }
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+                document.getElementById('status').className = 'status error';
+                document.getElementById('status').innerHTML = '<strong>Error:</strong> Could not fetch data from contract';
+            }
+        }
+
+        // Auto-connect if previously connected
+        window.addEventListener('load', () => {
+            const wasConnected = localStorage.getItem('karn_wallet_connected');
+            if (wasConnected === 'true' && window.freighter) {
+                connectWallet();
+            }
+        });
+
+        // Save connection state
+        window.addEventListener('beforeunload', () => {
+            if (walletAddress) {
+                localStorage.setItem('karn_wallet_connected', 'true');
+            } else {
+                localStorage.removeItem('karn_wallet_connected');
+            }
+        });
+    </script>
+</body>
+</html>

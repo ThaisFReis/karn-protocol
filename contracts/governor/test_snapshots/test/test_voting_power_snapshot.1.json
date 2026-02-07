@@ -178,6 +178,14 @@
                       "val": {
                         "u64": 86400
                       }
+                    },
+                    {
+                      "key": {
+                        "symbol": "total_mana_at_creation"
+                      },
+                      "val": {
+                        "u64": 5
+                      }
                     }
                   ]
                 }
@@ -272,6 +280,14 @@
                         },
                         "val": {
                           "map": [
+                            {
+                              "key": {
+                                "symbol": "participation_threshold"
+                              },
+                              "val": {
+                                "u64": 4
+                              }
+                            },
                             {
                               "key": {
                                 "symbol": "proposal_threshold"
@@ -1261,6 +1277,53 @@
       "event": {
         "ext": "v0",
         "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_call"
+              },
+              {
+                "bytes": "0000000000000000000000000000000000000000000000000000000000000002"
+              },
+              {
+                "symbol": "total_mana"
+              }
+            ],
+            "data": "void"
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000002",
+        "type_": "diagnostic",
+        "body": {
+          "v0": {
+            "topics": [
+              {
+                "symbol": "fn_return"
+              },
+              {
+                "symbol": "total_mana"
+              }
+            ],
+            "data": {
+              "u64": 5
+            }
+          }
+        }
+      },
+      "failed_call": false
+    },
+    {
+      "event": {
+        "ext": "v0",
+        "contract_id": "0000000000000000000000000000000000000000000000000000000000000001",
         "type_": "contract",
         "body": {
           "v0": {
@@ -1416,6 +1479,14 @@
                   },
                   "val": {
                     "u64": 86400
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "total_mana_at_creation"
+                  },
+                  "val": {
+                    "u64": 5
                   }
                 }
               ]
@@ -1742,6 +1813,14 @@
                   },
                   "val": {
                     "u64": 86400
+                  }
+                },
+                {
+                  "key": {
+                    "symbol": "total_mana_at_creation"
+                  },
+                  "val": {
+                    "u64": 5
                   }
                 }
               ]

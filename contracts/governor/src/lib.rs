@@ -152,6 +152,13 @@ impl GovernorContract {
         let proposal_count = get_proposal_count(&env);
         let proposal_id = proposal_count + 1;
 
+        // KRN-03: Snapshot total Mana supply for participation threshold
+        let total_mana: u64 = env.invoke_contract(
+            &valocracy,
+            &Symbol::new(&env, "total_mana"),
+            ().into_val(&env),
+        );
+
         let proposal = Proposal {
             id: proposal_id,
             proposer: proposer.clone(),
@@ -162,6 +169,7 @@ impl GovernorContract {
             against_votes: 0,
             executed: false,
             actions,
+            total_mana_at_creation: total_mana, // KRN-03
         };
 
         set_proposal(&env, proposal_id, &proposal);
@@ -314,14 +322,20 @@ impl GovernorContract {
             return Ok(ProposalState::Defeated);
         }
 
-        let for_percentage = (proposal.for_votes * 100) / total_votes;
-        
-        // Get config for quorum
-        // Note: Ideally we should store the snapshot of config *at proposal creation* 
-        // to avoid shifting goalposts. But for now, using current config is acceptable for MVP protocol.
-        // Or better: the proposal snapshot logic is complex.
-        // Let's use current config.
+        // Get config for quorum and participation thresholds
         let config = get_config(&env).ok_or(GovernorError::NotInitialized)?;
+
+        // KRN-03: Check participation threshold FIRST
+        // Prevent single-vote proposal hijacking by requiring minimum participation
+        let participation_percentage = (total_votes * 100) / proposal.total_mana_at_creation;
+        if participation_percentage < config.participation_threshold {
+            // Insufficient participation - proposal fails regardless of approval
+            return Ok(ProposalState::Defeated);
+        }
+
+        // Check approval threshold (quorum_percentage)
+        // This is the percentage of FOR votes vs TOTAL votes cast
+        let for_percentage = (proposal.for_votes * 100) / total_votes;
 
         if for_percentage >= config.quorum_percentage {
             Ok(ProposalState::Succeeded)

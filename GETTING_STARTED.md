@@ -623,7 +623,7 @@ cd backend && npm run dev
 ### Support
 - **Email**: support@karn.io
 - **GitHub Issues**: [Report bugs](https://github.com/karn-protocol/karn/issues)
-- **Documentation**: [Full docs](../Docs/)
+- **Documentation**: [Full docs](./docs/)
 
 ---
 

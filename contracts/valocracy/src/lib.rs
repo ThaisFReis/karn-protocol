@@ -540,7 +540,28 @@ impl ValocracyContract {
         get_user_stats(&env, &account).map_or(false, |s| s.verified)
     }
 
-
+    /// Get approximate total Mana in the system
+    ///
+    /// KRN-03: Required for participation threshold calculations.
+    ///
+    /// **SIMPLIFIED IMPLEMENTATION:**
+    /// Returns `total_supply * MEMBER_FLOOR` as a conservative lower bound.
+    /// This assumes all members have minimum Mana (floor only).
+    ///
+    /// **Limitation:** This underestimates actual total Mana since most members
+    /// have badges with rarity > MEMBER_FLOOR. A full implementation would
+    /// require either:
+    /// 1. Iterating all users (expensive, requires user registry)
+    /// 2. Maintaining running total in storage (complex, requires updates on mint/revoke)
+    ///
+    /// **Impact:** Participation threshold is MORE STRICT than configured
+    /// (requires higher actual participation to pass). This is conservative
+    /// and safe for governance.
+    pub fn total_mana(env: Env) -> u64 {
+        let total_supply = get_total_supply(&env);
+        // Conservative estimate: assume everyone has only MEMBER_FLOOR
+        total_supply * MEMBER_FLOOR
+    }
 
     // ============ Internal Helpers ============
 

@@ -53,4 +53,7 @@ pub struct Proposal {
     pub executed: bool,
     /// Actions to execute on success
     pub actions: Vec<Action>,
+    /// Total Mana supply at proposal creation time
+    /// KRN-03: Used to calculate participation percentage
+    pub total_mana_at_creation: u64,
 }

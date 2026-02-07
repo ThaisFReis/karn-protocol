@@ -52,6 +52,14 @@
                           "map": [
                             {
                               "key": {
+                                "symbol": "participation_threshold"
+                              },
+                              "val": {
+                                "u64": 4
+                              }
+                            },
+                            {
+                              "key": {
                                 "symbol": "proposal_threshold"
                               },
                               "val": {

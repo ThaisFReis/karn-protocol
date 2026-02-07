@@ -28,6 +28,7 @@ pub enum TreasuryError {
     InsufficientAssets = 5,
     ZeroAmount = 6,
     ReentrancyDetected = 7,
+    MathOverflow = 8,
 }
 
 #[contract]
@@ -88,11 +89,15 @@ impl TreasuryContract {
 
         // Update user shares
         let current_shares = get_user_shares(&env, &receiver);
-        set_user_shares(&env, &receiver, current_shares + shares);
+        let new_user_shares = current_shares.checked_add(shares)
+            .ok_or(TreasuryError::MathOverflow)?;
+        set_user_shares(&env, &receiver, new_user_shares);
 
         // Update total shares
         let total = get_total_shares(&env);
-        set_total_shares(&env, total + shares);
+        let new_total = total.checked_add(shares)
+            .ok_or(TreasuryError::MathOverflow)?;
+        set_total_shares(&env, new_total);
 
         extend_instance_ttl(&env);
 
@@ -142,11 +147,15 @@ impl TreasuryContract {
         }
 
         // Update user shares
-        set_user_shares(&env, &caller, user_shares - shares);
+        let new_user_shares = user_shares.checked_sub(shares)
+            .ok_or(TreasuryError::MathOverflow)?;
+        set_user_shares(&env, &caller, new_user_shares);
 
         // Update total shares
         let total = get_total_shares(&env);
-        set_total_shares(&env, total - shares);
+        let new_total = total.checked_sub(shares)
+            .ok_or(TreasuryError::MathOverflow)?;
+        set_total_shares(&env, new_total);
 
         // Transfer assets to receiver
         let asset_token = get_asset_token(&env).ok_or(TreasuryError::NotInitialized)?;
@@ -202,7 +211,14 @@ impl TreasuryContract {
         let total_assets = Self::total_assets(env);
 
         // assets = (total_assets * shares) / total_shares
-        Ok((total_assets * shares) / total_shares)
+        let total_assets_mul_shares = total_assets.checked_mul(shares)
+            .ok_or(TreasuryError::MathOverflow)?;
+        
+        // We know total_shares > 0 from check above
+        let assets = total_assets_mul_shares.checked_div(total_shares)
+            .ok_or(TreasuryError::MathOverflow)?;
+
+        Ok(assets)
     }
 
     /// Get valocracy contract address
@@ -260,3 +276,6 @@ impl TreasuryContract {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod test;

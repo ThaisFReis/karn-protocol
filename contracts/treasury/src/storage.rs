@@ -94,6 +94,8 @@ pub fn get_user_shares(env: &Env, account: &Address) -> i128 {
         .unwrap_or(0)
 }
 
+pub fn set_user_shares(env: &Env, account: &Address, shares: i128) {
+    let key = DataKey::UserShares(account.clone());
     env.storage().persistent().set(&key, &shares);
     extend_persistent_ttl(env, &key);
 }

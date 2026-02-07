@@ -1,5 +1,5 @@
-import { Client as GeneratedGovernorClient, Result } from '../generated/governor/src';
-import { AssembledTransaction } from '@stellar/stellar-sdk/contract';
+import { Client as GeneratedGovernorClient } from '../generated/governor/src';
+import { AssembledTransaction, Result } from '@stellar/stellar-sdk/contract';
 
 export class GovernorClient {
   private client: GeneratedGovernorClient;

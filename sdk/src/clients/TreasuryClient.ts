@@ -1,5 +1,5 @@
-import { Client as GeneratedTreasuryClient, Result } from '../generated/treasury/src';
-import { AssembledTransaction } from '@stellar/stellar-sdk/contract';
+import { Client as GeneratedTreasuryClient } from '../generated/treasury/src';
+import { AssembledTransaction, Result } from '@stellar/stellar-sdk/contract';
 
 export class TreasuryClient {
   private client: GeneratedTreasuryClient;

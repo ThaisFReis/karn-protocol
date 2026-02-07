@@ -1,6 +1,6 @@
-import { Client as GeneratedValocracyClient, Result } from '../generated/valocracy/src';
+import { Client as GeneratedValocracyClient } from '../generated/valocracy/src';
 import { rpc } from '@stellar/stellar-sdk';
-import { AssembledTransaction } from '@stellar/stellar-sdk/contract';
+import { AssembledTransaction, Result } from '@stellar/stellar-sdk/contract';
 
 export class ValocracyClient {
   private client: GeneratedValocracyClient;
@@ -53,8 +53,8 @@ export class ValocracyClient {
     // It returns `Promise<AssembledTransaction<u64>>`.
     // AssembledTransaction has `.result`.
     
-    const { result } = await this.client.level_of({ account: address });
-    return Number(result);
+    const { result: finalResult } = await this.client.level_of({ account: address });
+    return Number(finalResult);
   }
 
   /**

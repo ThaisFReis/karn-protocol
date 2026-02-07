@@ -24,6 +24,8 @@ pub enum DataKey {
     Lab(u32),
     /// User address -> Claimable balance (Scholarship funds)
     ClaimableBalance(Address),
+    /// KRN-01: Restricted reserves (scholarship funds escrowed, not available for share redemption)
+    RestrictedReserves,
 }
 
 /// Status of a Lab
@@ -108,6 +110,22 @@ pub fn get_total_shares(env: &Env) -> i128 {
 
 pub fn set_total_shares(env: &Env, shares: i128) {
     env.storage().instance().set(&DataKey::TotalShares, &shares);
+}
+
+// ============ Restricted Reserves (KRN-01) ============
+
+/// Get the amount of restricted reserves (scholarship funds escrowed)
+/// KRN-01: These funds are NOT available for share redemption
+pub fn get_restricted_reserves(env: &Env) -> i128 {
+    env.storage()
+        .instance()
+        .get(&DataKey::RestrictedReserves)
+        .unwrap_or(0)
+}
+
+/// Set the amount of restricted reserves
+pub fn set_restricted_reserves(env: &Env, amount: i128) {
+    env.storage().instance().set(&DataKey::RestrictedReserves, &amount);
 }
 
 // ============ User Shares ============

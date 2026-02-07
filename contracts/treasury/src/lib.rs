@@ -15,6 +15,8 @@ use storage::{
     set_valocracy, set_governor, set_asset_token, set_total_shares, set_user_shares,
     extend_instance_ttl,
     is_locked, acquire_lock, release_lock,
+    // KRN-01: Restricted reserves (scholarship funds)
+    get_restricted_reserves, set_restricted_reserves,
     // Lab Escrow
     get_lab, set_lab, get_lab_counter, set_lab_counter, get_claimable, set_claimable,
     Lab, LabStatus,
@@ -195,14 +197,21 @@ impl TreasuryContract {
     }
 
     /// Get total assets in the treasury by querying the actual token balance
+    ///
+    /// KRN-01 FIX: Excludes restricted reserves (scholarship funds) from shareholder assets.
+    /// This prevents shareholders from withdrawing scholarship money.
     pub fn total_assets(env: Env) -> i128 {
-        match get_asset_token(&env) {
+        let total_balance = match get_asset_token(&env) {
             Some(asset) => {
                 let client = token::TokenClient::new(&env, &asset);
                 client.balance(&env.current_contract_address())
             }
             None => 0,
-        }
+        };
+
+        // KRN-01: Exclude restricted reserves (scholarship funds)
+        let restricted = get_restricted_reserves(&env);
+        total_balance.saturating_sub(restricted)
     }
 
     /// Get total shares outstanding
@@ -309,6 +318,14 @@ impl TreasuryContract {
         let client = token::TokenClient::new(&env, &asset_token);
         client.transfer(&funder, &env.current_contract_address(), &total_amount);
 
+        // KRN-01: Increment restricted reserves
+        // These funds are escrowed for scholarships and cannot be withdrawn by shareholders
+        let current_restricted = get_restricted_reserves(&env);
+        let new_restricted = current_restricted
+            .checked_add(total_amount)
+            .ok_or(TreasuryError::MathOverflow)?;
+        set_restricted_reserves(&env, new_restricted);
+
         // Create lab
         let lab = Lab {
             id: new_lab_id,
@@ -402,6 +419,14 @@ impl TreasuryContract {
             .checked_sub(amount)
             .ok_or(TreasuryError::MathOverflow)?;
         set_claimable(&env, &member, new_claimable);
+
+        // KRN-01: Decrement restricted reserves
+        // Scholarship funds are being released, so reduce the reserved amount
+        let current_restricted = get_restricted_reserves(&env);
+        let new_restricted = current_restricted
+            .checked_sub(amount)
+            .ok_or(TreasuryError::MathOverflow)?;
+        set_restricted_reserves(&env, new_restricted);
 
         // Transfer assets to member
         let asset_token = get_asset_token(&env).ok_or(TreasuryError::NotInitialized)?;

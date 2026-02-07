@@ -17,35 +17,21 @@ export class ValocracyClient {
     });
   }
 
-  /**
-   * Get the current raw level of an account (without decay)
-   * @param address - The account address to query
-   * @returns The raw level as a number
-   */
+
   async getLevel(address: string): Promise<number> {
     const tx = await this.client.level_of({ account: address });
-    // AssembledTransaction has a `result` property after simulation (which happens by default)
     return Number(tx.result);
   }
 
-  /**
-   * Get the current voting power (Mana) with decay applied
-   * @param address - The account address to query
-   * @returns The current Mana (voting power) as a number
-   */
+  // Get voting power (Mana) with decay
+
   async getMana(address: string): Promise<number> {
     const tx = await this.client.get_votes({ account: address });
     return Number(tx.result);
   }
 
-  /**
-   * Self-register using backend signature
-   * @param caller - The caller's address
-   * @param signature - Ed25519 signature from backend
-   * @param nonce - Unique nonce to prevent replay
-   * @param expiry - Signature expiration timestamp
-   * @returns AssembledTransaction that needs to be signed and sent
-   */
+  // Self-register with backend signature
+
   async selfRegister(
     caller: string,
     signature: Buffer,

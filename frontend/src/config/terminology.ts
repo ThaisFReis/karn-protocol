@@ -4,22 +4,9 @@
  * Enables protocol adaptation for different use cases without modifying smart contracts.
  * Each deployment can use custom terminology by selecting a preset or defining custom config.
  *
- * @example
- * ```typescript
- * // Use Karn's education terminology
- * const config = KARN_TERMINOLOGY;
- *
- * // Use co-op terminology
- * const config = COOP_TERMINOLOGY;
- *
- * // Define custom terminology
- * const config: TerminologyConfig = {
- *   badge: { singular: "Certificate", plural: "Certificates" },
- *   ...
- * };
- * ```
- */
 
+
+ */
 export interface TerminologyTerm {
   /** Singular form (e.g., "Badge", "Membership Tier") */
   singular: string;
@@ -72,9 +59,7 @@ export interface TerminologyConfig {
 
 // ============ Preset Configurations ============
 
-/**
- * Karn's Original Terminology (Education/Scholarship Focus)
- */
+// Karn's Original Terminology (Education/Scholarship Focus)
 export const KARN_TERMINOLOGY: TerminologyConfig = {
   protocolName: "Karn Valocracy",
   tagline: "Empowering women through contribution-driven governance",
@@ -153,9 +138,7 @@ export const KARN_TERMINOLOGY: TerminologyConfig = {
   }
 };
 
-/**
- * Worker Cooperative Terminology
- */
+// Worker Cooperative Terminology
 export const COOP_TERMINOLOGY: TerminologyConfig = {
   protocolName: "Co-op Protocol",
   tagline: "Democratic worker ownership through contribution",
@@ -234,9 +217,7 @@ export const COOP_TERMINOLOGY: TerminologyConfig = {
   }
 };
 
-/**
- * Open Source DAO Terminology
- */
+// Open Source DAO Terminology
 export const DAO_TERMINOLOGY: TerminologyConfig = {
   protocolName: "Contributor DAO",
   tagline: "Rewarding open source contributions with governance power",
@@ -315,9 +296,7 @@ export const DAO_TERMINOLOGY: TerminologyConfig = {
   }
 };
 
-/**
- * Community/Gaming Terminology
- */
+// Community/Gaming Terminology
 export const COMMUNITY_TERMINOLOGY: TerminologyConfig = {
   protocolName: "Community XP",
   tagline: "Earn influence through participation",
@@ -396,9 +375,7 @@ export const COMMUNITY_TERMINOLOGY: TerminologyConfig = {
   }
 };
 
-/**
- * Gig Economy Platform Terminology
- */
+// Gig Economy Platform Terminology
 export const GIG_TERMINOLOGY: TerminologyConfig = {
   protocolName: "Freelancer Collective",
   tagline: "Reputation-based gig marketplace",
@@ -479,9 +456,7 @@ export const GIG_TERMINOLOGY: TerminologyConfig = {
 
 // ============ Helper Functions ============
 
-/**
- * Get terminology config from preset name or environment variable
- */
+// Get terminology config from preset name or environment variable
 export function getTerminologyConfig(preset?: string): TerminologyConfig {
   const presetName = preset || process.env.NEXT_PUBLIC_TERMINOLOGY_PRESET || 'karn';
 
@@ -506,9 +481,7 @@ export function getTerminologyConfig(preset?: string): TerminologyConfig {
   }
 }
 
-/**
- * Available preset names
- */
+// Available preset names
 export const TERMINOLOGY_PRESETS = [
   { value: 'karn', label: 'Karn (Education)', config: KARN_TERMINOLOGY },
   { value: 'coop', label: 'Worker Co-op', config: COOP_TERMINOLOGY },

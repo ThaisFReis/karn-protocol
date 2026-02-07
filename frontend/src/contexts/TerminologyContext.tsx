@@ -56,11 +56,6 @@ export function TerminologyProvider({ children }: { children: ReactNode }) {
 
   /**
    * Get a terminology term (singular or plural)
-   *
-   * @example
-   * term('badge') // "Badge"
-   * term('badge', true) // "Badges"
-   * term('mana') // "Mana" (same in singular/plural)
    */
   const term = (
     key: keyof Pick<TerminologyConfig, 'badge' | 'mana' | 'lab' | 'scholarship' | 'funder' | 'proposal' | 'vote' | 'governance'>,
@@ -72,9 +67,6 @@ export function TerminologyProvider({ children }: { children: ReactNode }) {
 
   /**
    * Get an action verb
-   *
-   * @example
-   * action('propose') // "Propose" or "Submit Motion" depending on config
    */
   const action = (key: keyof TerminologyConfig['actions']): string => {
     return config.actions[key];
@@ -82,9 +74,6 @@ export function TerminologyProvider({ children }: { children: ReactNode }) {
 
   /**
    * Get a UI label
-   *
-   * @example
-   * ui('dashboard') // "Dashboard" or "Worker Dashboard" depending on config
    */
   const ui = (key: keyof TerminologyConfig['ui']): string => {
     return config.ui[key];
@@ -116,21 +105,6 @@ export function TerminologyProvider({ children }: { children: ReactNode }) {
 
 /**
  * Hook to access terminology configuration
- *
- * @example
- * ```typescript
- * function MyComponent() {
- *   const { term, action, config } = useTerminology();
- *
- *   return (
- *     <div>
- *       <h1>{term('badge', true)}</h1>
- *       <p>Earn {term('badge', true)} to gain {term('mana')}</p>
- *       <button>{action('mint')}</button>
- *     </div>
- *   );
- * }
- * ```
  */
 export function useTerminology(): TerminologyContextType {
   const context = useContext(TerminologyContext);

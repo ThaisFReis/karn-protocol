@@ -1,18 +1,5 @@
-//! Treasury - Governance-Controlled Asset Management for Valocracy
-//!
-//! 🏛️ VALOCRACY MODEL: Treasury is managed collectively, not individually.
-//!
-//! ## Principles
-//! - **All withdrawals require governance approval** - No permissionless redemptions
-//! - **Collective decision-making** - Community votes on every fund movement
-//! - **Contribution-based power** - Voting weighted by Mana (earned through participation)
-//! - **No admin keys** - Even core team needs community approval to withdraw
-//!
-//! ## Architecture
-//! - Shares track contribution-based allocation (informational/potential)
-//! - Only the Governor contract can move funds via `transfer()`
-//! - Valocracy contract allocates shares when minting badges
-//! - Restricted reserves isolate scholarship funds from general treasury
+//! Treasury - Governance-controlled asset management.
+//! All transfers require governance approval. Only the Governor contract can move funds.
 
 #![no_std]
 
@@ -55,12 +42,9 @@ pub struct TreasuryContract;
 
 #[contractimpl]
 impl TreasuryContract {
-    // ============ Initialization ============
+
 
     /// Initialize the Treasury contract.
-    ///
-    /// No admin: stores valocracy, governor, and asset token addresses.
-    /// All privileged operations go through the governor (governance).
     pub fn initialize(
         env: Env,
         valocracy: Address,
@@ -80,7 +64,7 @@ impl TreasuryContract {
         Ok(())
     }
 
-    // ============ Governor-Only Config ============
+
 
     /// Update the governor contract address (migration path).
     /// Only callable by the current governor.
@@ -92,22 +76,10 @@ impl TreasuryContract {
         Ok(())
     }
 
-    // ============ Share Accounting (Called by Valocracy) ============
 
-    /// Allocate shares to a user account — called by Valocracy contract
-    ///
-    /// 📊 SHARE ACCOUNTING: Shares track contribution-based allocation of treasury value.
-    ///
-    /// In Valocracy:
-    /// - Shares represent potential economic interest proportional to contribution
-    /// - Shares are allocated when badges are minted (based on rarity)
-    /// - **Shares CANNOT be individually redeemed** (no permissionless withdraw)
-    /// - Shares may be used for:
-    ///   * Informational: Track member's proportional contribution
-    ///   * Governance weight: Additional voting power (if implemented)
-    ///   * Future distributions: Basis for governance-approved airdrops
-    ///
-    /// All actual fund movements require governance approval via `transfer()`.
+
+    /// Allocate shares — called by Valocracy when badges are minted.
+    /// Shares track contribution-based allocation but cannot be individually redeemed.
     pub fn deposit(env: Env, receiver: Address, shares: i128) -> Result<(), TreasuryError> {
         let valocracy = get_valocracy(&env).ok_or(TreasuryError::NotInitialized)?;
         valocracy.require_auth();
@@ -143,20 +115,9 @@ impl TreasuryContract {
         Ok(())
     }
 
-    // ============ Withdraw (DEPRECATED - Use Governance) ============
 
-    /// ⚠️ DEPRECATED: Individual withdrawals are not allowed in Valocracy.
-    ///
-    /// In Valocracy, all Treasury withdrawals must be approved through governance.
-    /// Members cannot unilaterally redeem shares for assets.
-    ///
-    /// To withdraw funds:
-    /// 1. Create a governance proposal requesting funds
-    /// 2. Community votes on the proposal (weighted by Mana)
-    /// 3. If approved, Governor executes and calls `spend()` to transfer funds
-    ///
-    /// This function is kept for backward compatibility but always returns NotAuthorized.
-    /// Use the governance process via `spend()` instead.
+
+    /// Withdraw is deprecated. All withdrawals must be approved through governance via `transfer()`.
     pub fn withdraw(
         _env: Env,
         _caller: Address,
@@ -168,7 +129,7 @@ impl TreasuryContract {
         Err(TreasuryError::NotAuthorized)
     }
 
-    // ============ View Functions ============
+
 
     /// Get the underlying asset token address
     pub fn asset(env: Env) -> Option<Address> {
@@ -225,28 +186,15 @@ impl TreasuryContract {
         get_governor(&env)
     }
 
-    // ============ Governance-Controlled Transfers (VALOCRACY) ============
 
-    /// Transfer treasury assets — ONLY callable by the Governor contract
-    ///
-    /// 🏛️ VALOCRACY PRINCIPLE: All treasury movements require governance approval.
-    ///
-    /// This is the ONLY way to move funds from the Treasury. It is invoked as part
-    /// of executing an approved governance proposal:
-    ///
-    /// 1. Member creates proposal: "Send X tokens to address Y"
-    /// 2. Community votes (weighted by Mana = contribution-based power)
-    /// 3. If approved: Governor calls this function to execute the transfer
-    /// 4. If rejected: No transfer happens
-    ///
-    /// This enforces collective decision-making instead of individual redemptions.
-    /// Even core team members cannot withdraw without community approval.
+
+    /// Transfer assets (only callable by Governor).
+    /// Enforces collective decision-making instead of individual redemptions.
     pub fn transfer(
         env: Env,
         receiver: Address,
         amount: i128,
     ) -> Result<(), TreasuryError> {
-        // CRITICAL: Only Governor can call this
         let governor = get_governor(&env).ok_or(TreasuryError::NotInitialized)?;
         governor.require_auth();
 
@@ -254,7 +202,6 @@ impl TreasuryContract {
             return Err(TreasuryError::ZeroAmount);
         }
 
-        // Check lock
         if is_locked(&env) {
             return Err(TreasuryError::ReentrancyDetected);
         }
@@ -282,9 +229,7 @@ impl TreasuryContract {
         Ok(())
     }
 
-    /// Legacy alias for transfer() — kept for backward compatibility
-    ///
-    /// Use `transfer()` instead. This function will be removed in future versions.
+    /// Legacy alias for transfer().
     pub fn spend(
         env: Env,
         receiver: Address,
@@ -293,7 +238,7 @@ impl TreasuryContract {
         Self::transfer(env, receiver, amount)
     }
 
-    // ============ Scholarship Escrow ============
+
 
     /// Fund a new Lab (Scholarship)
     ///
@@ -320,8 +265,7 @@ impl TreasuryContract {
         let client = token::TokenClient::new(&env, &asset_token);
         client.transfer(&funder, &env.current_contract_address(), &total_amount);
 
-        // KRN-01: Increment restricted reserves
-        // These funds are escrowed for scholarships and cannot be withdrawn by shareholders
+        // KRN-01: Increment restricted reserves (escrowed for scholarships)
         let current_restricted = get_restricted_reserves(&env);
         let new_restricted = current_restricted
             .checked_add(total_amount)
@@ -348,10 +292,7 @@ impl TreasuryContract {
         Ok(new_lab_id)
     }
 
-    /// Approve scholarship for a member
-    ///
-    /// Releases scholarship funds to a member's claimable balance.
-    /// Only callable by governor (governance/admin/mentor approval).
+    /// Releases scholarship funds to a member's claimable balance (Governor only).
     pub fn approve_scholarship(
         env: Env,
         lab_id: u32,
@@ -388,17 +329,12 @@ impl TreasuryContract {
         Ok(())
     }
 
-    /// Get claimable balance for a member
-    ///
-    /// Returns the amount of scholarship funds available for withdrawal.
+    /// Get claimable scholarship balance.
     pub fn get_claimable_balance(env: Env, member: Address) -> i128 {
         get_claimable(&env, &member)
     }
 
-    /// Withdraw scholarship funds
-    ///
-    /// Allows members to withdraw their approved scholarship funds.
-    /// Updated to check claimable balance instead of shares.
+    /// Withdraw approved scholarship funds.
     pub fn withdraw_scholarship(
         env: Env,
         member: Address,
@@ -423,7 +359,6 @@ impl TreasuryContract {
         set_claimable(&env, &member, new_claimable);
 
         // KRN-01: Decrement restricted reserves
-        // Scholarship funds are being released, so reduce the reserved amount
         let current_restricted = get_restricted_reserves(&env);
         let new_restricted = current_restricted
             .checked_sub(amount)

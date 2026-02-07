@@ -1,7 +1,5 @@
-//! Governor - On-chain Governance Contract for Valocracy
-//!
-//! Manages proposals and voting using Mana-weighted votes from the Valocracy contract.
-//! No admin: any member (level > 0) can create proposals.
+//! Governor contract for Soroban-based on-chain governance.
+//! Manages proposals and voting using Mana-weighted votes.
 
 #![no_std]
 
@@ -54,12 +52,9 @@ pub struct GovernorContract;
 
 #[contractimpl]
 impl GovernorContract {
-    // ============ Initialization ============
+
 
     /// Initialize the Governor contract.
-    ///
-    /// No admin: only stores the Valocracy contract address for membership checks
-    /// and voting power queries.
     pub fn initialize(
         env: Env,
         valocracy: Address,
@@ -71,7 +66,7 @@ impl GovernorContract {
         set_valocracy(&env, &valocracy);
         set_proposal_count(&env, 0);
         
-        // Initialize with default configuration
+
         let config = GovernanceConfig::default(&env);
         set_config(&env, &config);
 
@@ -79,17 +74,16 @@ impl GovernorContract {
         Ok(())
     }
 
-    // ============ Configuration ============
 
-    /// Update governance configuration.
-    /// Only callable by the Governor (self-governance).
+
+    /// Update governance configuration (Governor only).
     pub fn update_config(
         env: Env,
         config: GovernanceConfig,
     ) -> Result<(), GovernorError> {
         let valocracy = get_valocracy(&env).ok_or(GovernorError::NotInitialized)?;
         
-        // This function must be called by the Governor contract itself (via proposal execution)
+
         env.current_contract_address().require_auth();
 
         set_config(&env, &config);
@@ -101,11 +95,9 @@ impl GovernorContract {
         Ok(())
     }
 
-    // ============ Proposal Functions ============
 
-    /// Create a new proposal.
-    ///
-    /// Open to any member (level > 0 in the Valocracy contract).
+
+    /// Create a new proposal. Any member with sufficient voting power can propose.
     pub fn propose(
         env: Env,
         proposer: Address,
@@ -114,20 +106,18 @@ impl GovernorContract {
     ) -> Result<u64, GovernorError> {
         proposer.require_auth();
 
-        // Check lock
+
         if is_locked(&env) {
             return Err(GovernorError::ReentrancyDetected);
         }
 
-        // Acquire lock
+
         acquire_lock(&env);
 
-        // Verify proposer is a member via cross-contract call to Valocracy
+
         let valocracy = get_valocracy(&env).ok_or(GovernorError::NotInitialized)?;
         
-        // We use a functional approach or specific block to ensure we can release lock even if it fails? 
-        // Soroban panics on failure usually, rolling back everything including the lock, so we don't need "try-finally" for panics.
-        // We just need to handle Errors.
+
         
         let level: u64 = env.invoke_contract(
             &valocracy,
@@ -197,14 +187,14 @@ impl GovernorContract {
         proposal_id: u64,
         support: bool,
     ) -> Result<u64, GovernorError> {
-        voter.require_auth();
+
 
         let mut proposal = get_proposal(&env, proposal_id)
             .ok_or(GovernorError::ProposalNotFound)?;
 
         let current_time = env.ledger().timestamp();
 
-        // Check voting window
+
         if current_time < proposal.start_time {
             return Err(GovernorError::VotingNotStarted);
         }
@@ -212,12 +202,12 @@ impl GovernorContract {
             return Err(GovernorError::VotingEnded);
         }
 
-        // Check if already voted
+
         if has_voted(&env, proposal_id, &voter) {
             return Err(GovernorError::AlreadyVoted);
         }
 
-        // Check lock
+
         if is_locked(&env) {
             return Err(GovernorError::ReentrancyDetected);
         }
@@ -233,7 +223,6 @@ impl GovernorContract {
             return Err(GovernorError::NoVotingPower);
         }
 
-        // Record vote
         if support {
             proposal.for_votes += voting_power;
         } else {
@@ -266,17 +255,17 @@ impl GovernorContract {
             return Err(GovernorError::ProposalNotSucceeded);
         }
 
-        // Check lock
+
         if is_locked(&env) {
             return Err(GovernorError::ReentrancyDetected);
         }
         acquire_lock(&env);
 
-        // Mark as executed
+
         proposal.executed = true;
         set_proposal(&env, proposal_id, &proposal);
 
-        // Execute each action via cross-contract invocation
+
         for action in proposal.actions.iter() {
             env.invoke_contract::<soroban_sdk::Val>(
                 &action.contract_id,
@@ -294,7 +283,7 @@ impl GovernorContract {
         Ok(())
     }
 
-    // ============ View Functions ============
+
 
     /// Get a proposal by ID
     pub fn get_proposal(env: Env, proposal_id: u64) -> Option<Proposal> {
@@ -320,13 +309,13 @@ impl GovernorContract {
             return Ok(ProposalState::Active);
         }
 
-        // Voting ended - check result
+
         let total_votes = proposal.for_votes + proposal.against_votes;
         if total_votes == 0 {
             return Ok(ProposalState::Defeated);
         }
 
-        // Get config for quorum and participation thresholds
+
         let config = get_config(&env).ok_or(GovernorError::NotInitialized)?;
 
         // KRN-03: Check participation threshold FIRST
@@ -337,8 +326,7 @@ impl GovernorContract {
             return Ok(ProposalState::Defeated);
         }
 
-        // Check approval threshold (quorum_percentage)
-        // This is the percentage of FOR votes vs TOTAL votes cast
+
         let for_percentage = (proposal.for_votes * 100) / total_votes;
 
         if for_percentage >= config.quorum_percentage {
@@ -363,10 +351,9 @@ impl GovernorContract {
         get_valocracy(&env)
     }
 
-    /// Upgrade the contract to a new WASM hash.
-    /// Only callable by the governor itself (requires governance proposal).
+    /// Upgrade the contract to a new WASM hash (Governor only).
     pub fn upgrade(env: Env, new_wasm_hash: BytesN<32>) -> Result<(), GovernorError> {
-        // Only the governor contract itself can upgrade
+
         env.current_contract_address().require_auth();
         
         env.deployer().update_current_contract_wasm(new_wasm_hash.clone());
@@ -380,7 +367,7 @@ impl GovernorContract {
         Ok(())
     }
 
-    // ============ Internal Functions ============
+
 
     /// Get voting power from Valocracy contract (cross-contract call)
     fn get_voting_power(env: &Env, valocracy_addr: &Address, voter: &Address) -> u64 {

@@ -16,8 +16,8 @@ export class TreasuryClient {
     });
   }
 
-  async getClaimableBalance(account: string): Promise<bigint> {
-    const { result } = await this.client.get_claimable_balance({ account });
+  async getClaimableBalance(member: string): Promise<bigint> {
+    const { result } = await this.client.get_claimable_balance({ member });
     return result;
   }
 }

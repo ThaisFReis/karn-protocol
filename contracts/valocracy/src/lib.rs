@@ -9,7 +9,7 @@ mod errors;
 mod storage;
 mod types;
 
-use soroban_sdk::{contract, contractimpl, Address, Env, String, Symbol, Vec, BytesN, Bytes};
+use soroban_sdk::{contract, contractimpl, Address, Env, String, Symbol, Vec, BytesN, Bytes, IntoVal};
 use soroban_sdk::xdr::ToXdr;
 
 use errors::ValocracyError;
@@ -60,8 +60,8 @@ impl ValocracyContract {
         founder: Address,
         governor: Address,
         treasury: Address,
-        name: String,
-        symbol: String,
+        // name: String, // Removed to fit 10 args limit
+        // symbol: String, // Removed to fit 10 args limit
         member_valor_id: u64,
         valor_ids: Vec<u64>,
         valor_rarities: Vec<u64>,
@@ -79,8 +79,8 @@ impl ValocracyContract {
         set_treasury(&env, &treasury);
         set_signer(&env, &signer);
         set_member_valor_id(&env, member_valor_id);
-        env.storage().instance().set(&Symbol::new(&env, "name"), &name);
-        env.storage().instance().set(&Symbol::new(&env, "symbol"), &symbol);
+        env.storage().instance().set(&Symbol::new(&env, "name"), &String::from_str(&env, "Valocracy"));
+        env.storage().instance().set(&Symbol::new(&env, "symbol"), &String::from_str(&env, "VALOR"));
         set_total_supply(&env, 0);
 
         // Register all initial valor types
@@ -175,7 +175,7 @@ impl ValocracyContract {
 
         // Verify signature
         let mut payload = Bytes::new(&env);
-        payload.append(&caller.to_xdr(&env));
+        payload.append(&caller.clone().to_xdr(&env));
         payload.append(&nonce.to_xdr(&env));
         payload.append(&expiry.to_xdr(&env));
 
@@ -221,7 +221,7 @@ impl ValocracyContract {
 
         // Verify signature
         let mut payload = Bytes::new(&env);
-        payload.append(&account.to_xdr(&env));
+        payload.append(&account.clone().to_xdr(&env));
         payload.append(&valor_id.to_xdr(&env));
         payload.append(&nonce.to_xdr(&env));
         payload.append(&expiry.to_xdr(&env));
@@ -421,19 +421,22 @@ impl ValocracyContract {
     ///
     /// Inactive members decay to exactly MEMBER_FLOOR regardless of their
     /// accumulated level. Legacy status offers zero protection against inactivity.
-    pub fn calculate_mana(level: u64, _permanent_level: u64, expiry: u64, current_time: u64) -> u64 {
+    pub fn calculate_mana(level: u64, permanent_level: u64, expiry: u64, current_time: u64) -> u64 {
         if level == 0 {
             return 0;
         }
 
         let floor = MEMBER_FLOOR;
+        if current_time >= expiry {
+            // Return max(permanent, floor)
+            return if permanent_level > floor { permanent_level } else { floor };
+        }
+
         let extra_level = level.saturating_sub(floor);
 
-        let bonus = if expiry > current_time {
+        let bonus = {
             let time_remaining = expiry - current_time;
             (extra_level * time_remaining) / VACANCY_PERIOD
-        } else {
-            0
         };
 
         floor + bonus
@@ -556,6 +559,25 @@ impl ValocracyContract {
             (Symbol::new(env, "mint"), account.clone()),
             (token_id, valor_id, new_level),
         );
+
+        // Grant Treasury shares equal to badge rarity
+        if let Some(treasury) = get_treasury(env) {
+            // We ignore errors here to not block minting if treasury fails?
+            // Or should we fail?
+            // "Share issuance policy: I am implementing Shares = Badge Rarity."
+            // If it fails, the user gets no shares. That seems bad.
+            // Let's propagate error.
+            
+            // i128::from(rarity) might panic if rarity is too big, but u64 fits in i128 easily.
+            let shares = i128::from(rarity);
+            if shares > 0 {
+                let _res: () = env.invoke_contract(
+                    &treasury,
+                    &Symbol::new(env, "deposit"),
+                    (account.clone(), shares).into_val(env),
+                );
+            }
+        }
 
         Ok(token_id)
     }

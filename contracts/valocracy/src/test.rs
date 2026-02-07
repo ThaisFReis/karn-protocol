@@ -322,3 +322,107 @@ fn test_guardian_mint_auth_check_passes_with_mock() {
 
     // Test passes if we reach here without panicking on auth
 }
+
+// ============ KRN-02 Security Tests: Voting Power Snapshot ============
+
+#[test]
+fn test_get_votes_at_historical() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, ValocracyContract);
+    let client = ValocracyContractClient::new(&env, &contract_id);
+
+    let founder = Address::generate(&env);
+    let governor = Address::generate(&env);
+    let treasury = Address::generate(&env);
+
+    let (m_id, ids, rars, metas, f_id, signer) = create_full_init_args(&env);
+
+    let t0 = env.ledger().timestamp();
+    client.initialize(&founder, &governor, &treasury, &m_id, &ids, &rars, &metas, &f_id, &signer);
+
+    // Verify get_votes_at returns same result as get_votes for current time
+    let current_mana = client.get_votes(&founder);
+    let mana_at_current = client.get_votes_at(&founder, &env.ledger().timestamp());
+    assert_eq!(current_mana, mana_at_current);
+
+    // Test at different future timestamps
+    // The key is that get_votes_at should produce deterministic results
+    // for the same timestamp, regardless of when it's called
+
+    let future_time_1 = t0 + 1_000_000;
+    let mana_1a = client.get_votes_at(&founder, &future_time_1);
+
+    // Fast forward ledger time
+    env.ledger().with_mut(|li| {
+        li.timestamp += 5_000_000;
+    });
+
+    // Query same timestamp again - should get same result
+    let mana_1b = client.get_votes_at(&founder, &future_time_1);
+    assert_eq!(mana_1a, mana_1b); // Deterministic!
+
+    // Test with a very far future time
+    let far_future = t0 + 100_000_000;
+    let mana_far = client.get_votes_at(&founder, &far_future);
+
+    // Should be >= permanent_level (founder has permanent 100)
+    assert!(mana_far >= 100);
+}
+
+#[test]
+fn test_get_votes_at_with_permanent_level() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, ValocracyContract);
+    let client = ValocracyContractClient::new(&env, &contract_id);
+
+    let founder = Address::generate(&env);
+    let governor = Address::generate(&env);
+    let treasury = Address::generate(&env);
+
+    let (m_id, ids, rars, metas, f_id, signer) = create_full_init_args(&env);
+    client.initialize(&founder, &governor, &treasury, &m_id, &ids, &rars, &metas, &f_id, &signer);
+
+    // Founder has permanent level 100 (never decays)
+    let t0 = env.ledger().timestamp();
+    assert_eq!(client.level_of(&founder), 100);
+
+    // At any timestamp, Founder should have 100 Mana
+    let mana_now = client.get_votes_at(&founder, &t0);
+    assert_eq!(mana_now, 100);
+
+    // 180 days later: still 100 (permanent)
+    let t_future = t0 + 15_552_000;
+    let mana_future = client.get_votes_at(&founder, &t_future);
+    assert_eq!(mana_future, 100);
+
+    // 10 years later: still 100
+    let t_far_future = t0 + (365 * 10 * 24 * 60 * 60);
+    let mana_far = client.get_votes_at(&founder, &t_far_future);
+    assert_eq!(mana_far, 100);
+}
+
+#[test]
+fn test_get_votes_at_zero_for_unregistered() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let contract_id = env.register_contract(None, ValocracyContract);
+    let client = ValocracyContractClient::new(&env, &contract_id);
+
+    let founder = Address::generate(&env);
+    let governor = Address::generate(&env);
+    let treasury = Address::generate(&env);
+    let random_user = Address::generate(&env);
+
+    let (m_id, ids, rars, metas, f_id, signer) = create_full_init_args(&env);
+    client.initialize(&founder, &governor, &treasury, &m_id, &ids, &rars, &metas, &f_id, &signer);
+
+    // Unregistered user should have 0 Mana at any timestamp
+    let t0 = env.ledger().timestamp();
+    assert_eq!(client.get_votes_at(&random_user, &t0), 0);
+    assert_eq!(client.get_votes_at(&random_user, &(t0 + 1000000)), 0);
+}

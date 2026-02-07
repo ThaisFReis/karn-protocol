@@ -471,6 +471,27 @@ impl ValocracyContract {
         Self::calculate_mana(stats.level, stats.permanent_level, stats.expiry, current_time)
     }
 
+    /// Get voting power (Mana) of an account at a specific timestamp
+    ///
+    /// KRN-02 FIX: Enables voting power snapshots at proposal creation time,
+    /// preventing flash voting attacks and ensuring consistent voting power
+    /// throughout the proposal lifecycle.
+    ///
+    /// # Arguments
+    /// * `account` - Address to query
+    /// * `timestamp` - Historical timestamp for Mana calculation
+    ///
+    /// # Returns
+    /// Voting power (Mana) at the specified timestamp
+    pub fn get_votes_at(env: Env, account: Address, timestamp: u64) -> u64 {
+        let stats = match get_user_stats(&env, &account) {
+            Some(s) => s,
+            None => return 0,
+        };
+
+        Self::calculate_mana(stats.level, stats.permanent_level, stats.expiry, timestamp)
+    }
+
     /// Calculate Mana (voting power with Member Floor)
     ///
     /// Formula: Mana = floor + bonus

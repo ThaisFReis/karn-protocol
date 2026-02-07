@@ -4,6 +4,7 @@ members = [
     "valocracy",
     "governor",
     "treasury",
+    "tests",
 ]
 
 [workspace.dependencies]

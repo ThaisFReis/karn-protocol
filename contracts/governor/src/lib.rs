@@ -10,6 +10,9 @@ mod storage;
 mod types;
 mod voting;
 
+#[cfg(test)]
+mod test;
+
 use soroban_sdk::{contract, contractimpl, contracterror, Address, Env, String, Symbol, Vec, IntoVal, BytesN};
 
 use proposal::{Proposal, ProposalState, Action};

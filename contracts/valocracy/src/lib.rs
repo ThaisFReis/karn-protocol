@@ -163,38 +163,16 @@ impl ValocracyContract {
 
     /// Mint a new soulbound NFT to an account.
     ///
-    /// Governor-only. Badge minting requires a governance proposal.
-    /// This increases the target's level and extends their expiry time.
-    pub fn mint(env: Env, account: Address, valor_id: u64) -> Result<u64, ValocracyError> {
-        // Set reentrancy guard
-        // Self::set_reentrancy_guard(&env)?; // Actually, mint_internal does cross contract call, maybe valuable? 
-        // But spec says "Note: Keep existing ReentrancyLock". 
-        // My previous hardening added ReentrancyLock to mint?
-        // Let's check if I added it previously.
-        // In the file content I read earlier (Step 503), `mint` did NOT have reentrancy guard.
-        // Wait, Step 503 content shows:
-        /*
-168:     pub fn mint(env: Env, account: Address, valor_id: u64) -> Result<u64, ValocracyError> {
-169:         let governor = get_governor(&env).ok_or(ValocracyError::NotInitialized)?;
-170:         governor.require_auth();
-171: 
-172:         Self::mint_internal(&env, &account, valor_id)
-173:     }
-        */
-        // So no ReentrancyLock there.
-        // However, `mint_internal` calls `Treasury.deposit`, which is a cross-contract call.
-        // SC-001.2 says "Add reentrancy guards to cross-contract calls".
-        // Maybe I should add it?
-        // But the task is "Merge Production Features". Production `mint` has reentrancy guard.
-        // Let's stick to the plan: "Implement check_mint_authorization".
-        
-        let governor = get_governor(&env).ok_or(ValocracyError::NotInitialized)?;
-        governor.require_auth();
+    /// Requires authorization from a valid minter for the specific badge category.
+    /// - Governance/Leadership/Track: See RBAC matrix
+    /// - Community: Any member
+    pub fn mint(env: Env, minter: Address, recipient: Address, valor_id: u64) -> Result<u64, ValocracyError> {
+        minter.require_auth();
 
         // Check role-based authorization
-        Self::check_mint_authorization(&env, &governor, valor_id)?;
+        Self::check_mint_authorization(&env, &minter, valor_id)?;
 
-        Self::mint_internal(&env, &account, valor_id)
+        Self::mint_internal(&env, &recipient, valor_id)
     }
 
     pub fn self_register(

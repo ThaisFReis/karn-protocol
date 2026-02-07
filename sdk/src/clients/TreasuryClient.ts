@@ -1,5 +1,4 @@
-import { Client as GeneratedTreasuryClient } from '../generated/treasury/src';
-import { AssembledTransaction, Result } from '@stellar/stellar-sdk/contract';
+import { Client as GeneratedTreasuryClient } from '../generated/treasury/src/index.js';
 
 export class TreasuryClient {
   private client: GeneratedTreasuryClient;
@@ -16,8 +15,13 @@ export class TreasuryClient {
     });
   }
 
+  /**
+   * Get the claimable balance for a member (scholarship escrow)
+   * @param member - The member's address
+   * @returns The claimable balance in stroops
+   */
   async getClaimableBalance(member: string): Promise<bigint> {
-    const { result } = await this.client.get_claimable_balance({ member });
-    return result;
+    const tx = await this.client.get_claimable_balance({ member });
+    return tx.result;
   }
 }

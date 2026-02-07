@@ -1,5 +1,4 @@
-import { Client as GeneratedGovernorClient } from '../generated/governor/src';
-import { AssembledTransaction, Result } from '@stellar/stellar-sdk/contract';
+import { Client as GeneratedGovernorClient } from '../generated/governor/src/index.js';
 
 export class GovernorClient {
   private client: GeneratedGovernorClient;
@@ -16,8 +15,13 @@ export class GovernorClient {
     });
   }
 
+  /**
+   * Get proposal details by ID
+   * @param proposalId - The proposal ID to query
+   * @returns The proposal object with all details
+   */
   async getProposal(proposalId: bigint): Promise<any> {
-    const { result } = await this.client.get_proposal({ proposal_id: BigInt(proposalId) });
-    return result; // Result<Proposal>
+    const tx = await this.client.get_proposal({ proposal_id: BigInt(proposalId) });
+    return tx.result;
   }
 }

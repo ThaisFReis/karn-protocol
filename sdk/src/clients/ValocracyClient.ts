@@ -1,6 +1,6 @@
-import { Client as GeneratedValocracyClient } from '../generated/valocracy/src';
-import { rpc } from '@stellar/stellar-sdk';
-import { AssembledTransaction, Result } from '@stellar/stellar-sdk/contract';
+import { Client as GeneratedValocracyClient } from '../generated/valocracy/src/index.js';
+import type { AssembledTransaction } from '@stellar/stellar-sdk/contract';
+import type { u64 } from '@stellar/stellar-sdk/contract';
 
 export class ValocracyClient {
   private client: GeneratedValocracyClient;
@@ -19,66 +19,44 @@ export class ValocracyClient {
 
   /**
    * Get the current raw level of an account (without decay)
+   * @param address - The account address to query
+   * @returns The raw level as a number
    */
   async getLevel(address: string): Promise<number> {
     const tx = await this.client.level_of({ account: address });
-    const result = await tx.simulate(); // Force simulation to get result
-    if (rpc.Api.isSimulationSuccess(result)) {
-        // The generated client usually decodes the result automatically in .signAndSend() or we need to extract it.
-        // Actually, AssembledTransaction has a `result` property if simulated?
-        // Wait, the generated client returns AssembledTransaction.
-        // We can call `tx.result` if we passed `simulate: true` (default).
-        // However, `tx.result` might be Result<T> or T.
-        // level_of returns u64.
-        
-        // Let's rely on standard simulation behavior
-        const val = result.result.retval; // This is XDR.
-        // The generated client helper `simulation` logic usually handles decoding if we use the helper methods.
-        
-        // Actually, newer generated clients have `await tx` resolving to ...?
-        // No, it returns AssembledTransaction.
-        // We can simulate and get the value.
-        // But for read-only, we just want the value.
-        
-        // The generated client has a standard way to get read-only data?
-        // Usually: const { result } = await client.method();
-        // But here it returns AssembledTransaction.
-    }
-    
-    // Newer scaffold-stellar clients:
-    // const { result } = await this.client.level_of({ account: address });
-    // return Number(result);
-    //
-    // Let's double check generated code signature.
-    // It returns `Promise<AssembledTransaction<u64>>`.
-    // AssembledTransaction has `.result`.
-    
-    const { result: finalResult } = await this.client.level_of({ account: address });
-    return Number(finalResult);
+    // AssembledTransaction has a `result` property after simulation (which happens by default)
+    return Number(tx.result);
   }
 
   /**
-   * Get the current voting power (Mana)
+   * Get the current voting power (Mana) with decay applied
+   * @param address - The account address to query
+   * @returns The current Mana (voting power) as a number
    */
   async getMana(address: string): Promise<number> {
-    const { result } = await this.client.get_votes({ account: address });
-    return Number(result);
+    const tx = await this.client.get_votes({ account: address });
+    return Number(tx.result);
   }
 
   /**
    * Self-register using backend signature
+   * @param caller - The caller's address
+   * @param signature - Ed25519 signature from backend
+   * @param nonce - Unique nonce to prevent replay
+   * @param expiry - Signature expiration timestamp
+   * @returns AssembledTransaction that needs to be signed and sent
    */
   async selfRegister(
-    caller: string, 
-    signature: Buffer, 
-    nonce: bigint, 
+    caller: string,
+    signature: Buffer,
+    nonce: bigint,
     expiry: bigint
-  ): Promise<AssembledTransaction<Result<bigint>>> {
+  ): Promise<AssembledTransaction<u64>> {
     return await this.client.self_register({
       caller,
       signature,
       nonce: BigInt(nonce),
-      expiry: BigInt(expiry)
+      expiry: BigInt(expiry),
     });
   }
 }

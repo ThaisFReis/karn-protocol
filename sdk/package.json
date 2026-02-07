@@ -1,5 +1,5 @@
 {
-  "name": "@karn/protocol-sdk",
+  "name": "@karn_lat/protocol-sdk",
   "version": "0.1.0-alpha.1",
   "description": "Official TypeScript SDK for Karn Protocol - Merit-based governance on Stellar",
   "type": "module",
@@ -43,5 +43,16 @@
     "ts-jest": "^29.0.0",
     "ts-node": "^10.0.0",
     "typescript": "^5.0.0"
-  }
+  },
+  "directories": {
+    "example": "examples"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ThaisFReis/karn-protocol.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ThaisFReis/karn-protocol/issues"
+  },
+  "homepage": "https://github.com/ThaisFReis/karn-protocol#readme"
 }

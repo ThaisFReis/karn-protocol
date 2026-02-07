@@ -8,8 +8,6 @@ use crate::types::{UserStats, Valor};
 #[contracttype]
 #[derive(Clone)]
 pub enum DataKey {
-    /// Admin address (kept for backward compat during migration, will be removed)
-    Admin,
     /// Whether the contract has been initialized
     Initialized,
     /// Founder address (receives permanent Founder badge)
@@ -56,16 +54,6 @@ fn extend_persistent_ttl(env: &Env, key: &DataKey) {
     env.storage()
         .persistent()
         .extend_ttl(key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
-}
-
-// ============ Admin Storage (legacy, kept for backward compat) ============
-
-pub fn get_admin(env: &Env) -> Option<Address> {
-    env.storage().instance().get(&DataKey::Admin)
-}
-
-pub fn set_admin(env: &Env, admin: &Address) {
-    env.storage().instance().set(&DataKey::Admin, admin);
 }
 
 // ============ Initialized Storage ============

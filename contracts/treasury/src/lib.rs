@@ -85,6 +85,9 @@ impl TreasuryContract {
     ///
     /// This is called by the Valocracy contract when minting NFTs.
     /// Shares represent the user's claim on treasury assets.
+    ///
+    /// Note: Unlike standard ERC4626 vaults, shares are allocated directly by
+    /// the Valocracy contract based on badge rarity, not converted from deposited assets.
     pub fn deposit(env: Env, receiver: Address, shares: i128) -> Result<(), TreasuryError> {
         let valocracy = get_valocracy(&env).ok_or(TreasuryError::NotInitialized)?;
         valocracy.require_auth();
@@ -92,6 +95,11 @@ impl TreasuryContract {
         if shares <= 0 {
             return Err(TreasuryError::ZeroAmount);
         }
+
+        // Validate deposit amount
+        // First deposit should meet minimum to prevent inflation attacks
+        let is_first_deposit = get_total_shares(&env) == 0;
+        vault::validate_deposit(shares, is_first_deposit)?;
 
         // Update user shares
         let current_shares = get_user_shares(&env, &receiver);
@@ -208,23 +216,15 @@ impl TreasuryContract {
     }
 
     /// Preview how many assets a share amount would yield
+    ///
+    /// Uses vault math with virtual offsets for security.
+    /// Rounds down (user gets slightly less, vault keeps remainder).
     pub fn preview_withdraw(env: Env, shares: i128) -> Result<i128, TreasuryError> {
         let total_shares = get_total_shares(&env);
-        if total_shares == 0 {
-            return Ok(0);
-        }
-
         let total_assets = Self::total_assets(env);
 
-        // assets = (total_assets * shares) / total_shares
-        let total_assets_mul_shares = total_assets.checked_mul(shares)
-            .ok_or(TreasuryError::MathOverflow)?;
-        
-        // We know total_shares > 0 from check above
-        let assets = total_assets_mul_shares.checked_div(total_shares)
-            .ok_or(TreasuryError::MathOverflow)?;
-
-        Ok(assets)
+        // Use secure vault math with virtual offsets and checked arithmetic
+        vault::convert_to_assets(shares, total_assets, total_shares)
     }
 
     /// Get valocracy contract address

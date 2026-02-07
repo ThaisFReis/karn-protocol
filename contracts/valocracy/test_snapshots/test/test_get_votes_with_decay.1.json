@@ -192,6 +192,14 @@
                       "val": {
                         "u64": 100
                       }
+                    },
+                    {
+                      "key": {
+                        "symbol": "verified"
+                      },
+                      "val": {
+                        "bool": false
+                      }
                     }
                   ]
                 }

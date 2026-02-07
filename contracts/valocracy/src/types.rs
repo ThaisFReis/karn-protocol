@@ -12,6 +12,8 @@ pub struct UserStats {
     pub permanent_level: u64,
     /// The expiration timestamp (Unix seconds)
     pub expiry: u64,
+    /// Whether the user has verified their identity (ADR-003)
+    pub verified: bool,
 }
 
 /// Valor type definition with rarity and metadata

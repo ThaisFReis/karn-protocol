@@ -1,14 +1,6 @@
 /**
- * WalletManager - Central coordinator for all wallet adapters
- *
  * Manages wallet selection, connection state, and provides unified API
  * for interacting with any supported Stellar wallet.
- *
- * Usage:
- *   const manager = new WalletManager();
- *   const wallets = manager.getAvailableWallets();
- *   await manager.connect(WalletType.FREIGHTER);
- *   const signedXdr = await manager.signTransaction(xdr);
  */
 
 import {

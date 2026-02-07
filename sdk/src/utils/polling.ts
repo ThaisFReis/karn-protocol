@@ -65,26 +65,8 @@ export interface PollingResult<T> {
  * @param transactionHash - The transaction hash to poll for
  * @param options - Polling configuration options
  * @returns Promise resolving to polling result
- *
- * @example
- * ```typescript
- * import { rpc } from '@stellar/stellar-sdk';
- * import { pollTransactionResult } from '@karn/protocol-sdk';
- *
- * const server = new rpc.Server('https://soroban-testnet.stellar.org');
- * const result = await pollTransactionResult(server, txHash, {
- *   maxAttempts: 30,
- *   intervalMs: 1000,
- *   onAttempt: (attempt, status) => console.log(`Attempt ${attempt}: ${status}`)
- * });
- *
- * if (result.success) {
- *   console.log('Transaction succeeded!', result.response);
- * } else {
- *   console.error('Transaction failed:', result.error);
- * }
- * ```
  */
+
 export async function pollTransactionResult(
   server: rpc.Server,
   transactionHash: string,
@@ -185,12 +167,8 @@ export async function pollTransactionResult(
  *
  * @param ms - Duration to wait in milliseconds
  * @returns Promise that resolves after the duration
- *
- * @example
- * ```typescript
- * await sleep(1000); // Wait 1 second
- * ```
  */
+
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -202,18 +180,8 @@ export function sleep(ms: number): Promise<void> {
  * @param transactionHashes - Array of transaction hashes to poll
  * @param options - Polling configuration options
  * @returns Promise resolving to array of polling results
- *
- * @example
- * ```typescript
- * const results = await pollMultipleTransactions(server, [hash1, hash2, hash3], {
- *   maxAttempts: 20,
- *   intervalMs: 2000
- * });
- *
- * const allSucceeded = results.every(r => r.success);
- * console.log(`${results.filter(r => r.success).length}/${results.length} succeeded`);
- * ```
  */
+
 export async function pollMultipleTransactions(
   server: rpc.Server,
   transactionHashes: string[],

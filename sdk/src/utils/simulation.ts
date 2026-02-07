@@ -33,22 +33,6 @@ export interface SimulationResult<T> {
  *
  * @param tx - AssembledTransaction to simulate
  * @returns Promise resolving to simulation result
- *
- * @example
- * ```typescript
- * import { simulateTransaction } from '@karn/protocol-sdk';
- * import { valocracy } from './clients';
- *
- * const tx = await valocracy.level_of({ account: 'GADDRESS...' });
- * const result = await simulateTransaction(tx);
- *
- * if (result.success) {
- *   console.log('Level:', result.result);
- *   console.log('Estimated fee:', result.fee, 'stroops');
- * } else {
- *   console.error('Simulation failed:', result.error);
- * }
- * ```
  */
 export async function simulateTransaction<T>(
   tx: AssembledTransaction<T>
@@ -84,16 +68,6 @@ export async function simulateTransaction<T>(
  *
  * @param tx - AssembledTransaction to check
  * @returns Promise resolving to boolean indicating if restoration is needed
- *
- * @example
- * ```typescript
- * const tx = await valocracy.level_of({ account: 'GADDRESS...' });
- * const needsRestore = await needsRestoration(tx);
- *
- * if (needsRestore) {
- *   console.log('Contract needs restoration before this call');
- * }
- * ```
  */
 export async function needsRestoration<T>(
   tx: AssembledTransaction<T>
@@ -108,13 +82,6 @@ export async function needsRestoration<T>(
  *
  * @param tx - AssembledTransaction to estimate
  * @returns Promise resolving to estimated fee in stroops
- *
- * @example
- * ```typescript
- * const tx = await governor.create_proposal({ ... });
- * const fee = await estimateFee(tx);
- * console.log(`Estimated cost: ${fee / 10_000_000} XLM`);
- * ```
  */
 export async function estimateFee<T>(
   tx: AssembledTransaction<T>
@@ -129,16 +96,6 @@ export async function estimateFee<T>(
  *
  * @param transactions - Array of AssembledTransactions to simulate
  * @returns Promise resolving to array of simulation results
- *
- * @example
- * ```typescript
- * const tx1 = await valocracy.level_of({ account: addr1 });
- * const tx2 = await valocracy.level_of({ account: addr2 });
- * const tx3 = await valocracy.level_of({ account: addr3 });
- *
- * const results = await simulateMultiple([tx1, tx2, tx3]);
- * const allSucceeded = results.every(r => r.success);
- * ```
  */
 export async function simulateMultiple<T>(
   transactions: AssembledTransaction<T>[]
@@ -151,17 +108,6 @@ export async function simulateMultiple<T>(
  *
  * @param simulation - The simulation response
  * @returns Human-readable error message
- *
- * @example
- * ```typescript
- * const tx = await valocracy.level_of({ account: 'INVALID' });
- * const simulation = await tx.simulate();
- *
- * if (rpc.Api.isSimulationError(simulation)) {
- *   const error = getSimulationError(simulation);
- *   console.error('Simulation failed:', error);
- * }
- * ```
  */
 export function getSimulationError(
   simulation: rpc.Api.SimulateTransactionResponse
@@ -182,16 +128,6 @@ export function getSimulationError(
  *
  * @param simulation - The simulation response
  * @returns True if simulation succeeded
- *
- * @example
- * ```typescript
- * const tx = await valocracy.getMana({ account: 'GADDRESS...' });
- * const simulation = await tx.simulate();
- *
- * if (isSimulationSuccess(simulation)) {
- *   console.log('Simulation succeeded, safe to submit');
- * }
- * ```
  */
 export function isSimulationSuccess(
   simulation: rpc.Api.SimulateTransactionResponse

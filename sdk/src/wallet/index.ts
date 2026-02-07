@@ -8,33 +8,7 @@
  * - xBull (modern wallet with advanced features)
  * - Rabet (DeFi-focused wallet with built-in swap)
  *
- * @example Basic usage
- * ```typescript
- * import { WalletManager, WalletType } from '@karn/sdk/wallet';
- *
- * const manager = new WalletManager();
- * const wallets = await manager.getAvailableWallets();
- *
- * // Connect to Freighter
- * const connection = await manager.connect(WalletType.FREIGHTER);
- * console.log('Connected:', connection.address);
- *
- * // Sign transaction
- * const signedXdr = await manager.signTransaction(xdr, {
- *   networkPassphrase: 'Test SDF Network ; September 2015'
- * });
- * ```
- *
- * @example Event handling
- * ```typescript
- * manager.on(WalletEvent.CONNECT, ({ walletType, address }) => {
- *   console.log(`Connected to ${walletType}:`, address);
- * });
- *
- * manager.on(WalletEvent.DISCONNECT, ({ walletType }) => {
- *   console.log(`Disconnected from ${walletType}`);
- * });
- * ```
+ * - Rabet (DeFi-focused wallet with built-in swap)
  */
 
 // Core wallet manager

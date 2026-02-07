@@ -6,13 +6,9 @@ use soroban_sdk::{contracttype, Address, Env};
 #[contracttype]
 #[derive(Clone)]
 pub enum DataKey {
-    /// Valocracy contract address
     Valocracy,
-    /// Governor contract address (authorized for spends)
     Governor,
-    /// Underlying asset token
     AssetToken,
-    /// Total shares outstanding
     TotalShares,
     /// User address -> shares
     UserShares(Address),
@@ -24,7 +20,6 @@ pub enum DataKey {
     Lab(u32),
     /// User address -> Claimable balance (Scholarship funds)
     ClaimableBalance(Address),
-    /// KRN-01: Restricted reserves (scholarship funds escrowed, not available for share redemption)
     RestrictedReserves,
 }
 
@@ -69,7 +64,7 @@ fn extend_persistent_ttl(env: &Env, key: &DataKey) {
         .extend_ttl(key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
 }
 
-// ============ Valocracy ============
+
 
 pub fn get_valocracy(env: &Env) -> Option<Address> {
     env.storage().instance().get(&DataKey::Valocracy)
@@ -79,7 +74,7 @@ pub fn set_valocracy(env: &Env, valocracy: &Address) {
     env.storage().instance().set(&DataKey::Valocracy, valocracy);
 }
 
-// ============ Governor ============
+
 
 pub fn get_governor(env: &Env) -> Option<Address> {
     env.storage().instance().get(&DataKey::Governor)
@@ -89,7 +84,7 @@ pub fn set_governor(env: &Env, governor: &Address) {
     env.storage().instance().set(&DataKey::Governor, governor);
 }
 
-// ============ Asset Token ============
+
 
 pub fn get_asset_token(env: &Env) -> Option<Address> {
     env.storage().instance().get(&DataKey::AssetToken)
@@ -99,7 +94,7 @@ pub fn set_asset_token(env: &Env, token: &Address) {
     env.storage().instance().set(&DataKey::AssetToken, token);
 }
 
-// ============ Total Shares ============
+
 
 pub fn get_total_shares(env: &Env) -> i128 {
     env.storage()
@@ -112,9 +107,8 @@ pub fn set_total_shares(env: &Env, shares: i128) {
     env.storage().instance().set(&DataKey::TotalShares, &shares);
 }
 
-// ============ Restricted Reserves (KRN-01) ============
 
-/// Get the amount of restricted reserves (scholarship funds escrowed)
+
 /// KRN-01: These funds are NOT available for share redemption
 pub fn get_restricted_reserves(env: &Env) -> i128 {
     env.storage()
@@ -128,7 +122,7 @@ pub fn set_restricted_reserves(env: &Env, amount: i128) {
     env.storage().instance().set(&DataKey::RestrictedReserves, &amount);
 }
 
-// ============ User Shares ============
+
 
 pub fn get_user_shares(env: &Env, account: &Address) -> i128 {
     let key = DataKey::UserShares(account.clone());
@@ -144,7 +138,7 @@ pub fn set_user_shares(env: &Env, account: &Address, shares: i128) {
     extend_persistent_ttl(env, &key);
 }
 
-// ============ Reentrancy Lock ============
+
 
 pub fn is_locked(env: &Env) -> bool {
     env.storage().instance().has(&DataKey::ReentrancyLock)
@@ -158,7 +152,7 @@ pub fn release_lock(env: &Env) {
     env.storage().instance().remove(&DataKey::ReentrancyLock);
 }
 
-// ============ Lab Escrow ============
+
 
 pub fn get_lab_counter(env: &Env) -> u32 {
     env.storage().instance().get(&DataKey::LabCounter).unwrap_or(0)

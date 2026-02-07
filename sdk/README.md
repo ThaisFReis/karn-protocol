@@ -1,6 +1,13 @@
-# @karn/protocol-sdk
+# @karn_lat/protocol-sdk
 
-The official TypeScript SDK for interacting with the Karn Protocol (Valocracy) on Stellar/Soroban.
+[![npm version](https://img.shields.io/npm/v/@karn_lat/protocol-sdk.svg?style=flat&color=purple)](https://www.npmjs.com/package/@karn_lat/protocol-sdk)
+[![npm downloads](https://img.shields.io/npm/dm/@karn_lat/protocol-sdk.svg?style=flat&color=purple)](https://www.npmjs.com/package/@karn_lat/protocol-sdk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Stellar: Soroban](https://img.shields.io/badge/Stellar-Soroban-blue.svg)](https://soroban.stellar.org)
+
+> **The official TypeScript SDK for Karn Protocol**
+>
+> Merit-based governance on Stellar/Soroban - where power = contribution, not capital
 
 ## Installation
 

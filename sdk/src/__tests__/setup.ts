@@ -4,6 +4,9 @@
  * Global configuration and mocks for all tests
  */
 
+// Make this file a module so global augmentations work in ESM
+export {};
+
 // Mock window object for browser APIs
 global.window = {
   localStorage: {

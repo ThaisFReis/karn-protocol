@@ -222,19 +222,16 @@ impl ValocracyContract {
         nonce: u64,
         expiry: u64,
     ) -> Result<u64, ValocracyError> {
-        // We do typically NOT require account auth here if the backend authorizes it,
-        // BUT to prevent spamming someone's wallet with badges they don't want,
-        // we might require account auth as well.
-        // However, usually "airdropping" merit badges is fine.
-        // Let's require auth just in case, or stick to backend auth as source of truth.
-        // Spec says "Validation: 1 Guardian... -> Mint".
-        // Let's assume backend auth is sufficient.
-        
+        // KRN-05 FIX: Require recipient authorization to prevent griefing attacks
+        // Recipient must consent to receiving the badge to prevent forced minting,
+        // storage rent costs, or reputation attacks
+        account.require_auth();
+
         if !is_initialized(&env) {
             return Err(ValocracyError::NotInitialized);
         }
 
-        // Verify signature
+        // Verify backend signature
         let mut payload = Bytes::new(&env);
         payload.append(&account.clone().to_xdr(&env));
         payload.append(&valor_id.to_xdr(&env));
@@ -498,7 +495,11 @@ impl ValocracyContract {
 
         let bonus = {
             let time_remaining = expiry - current_time;
-            (extra_level * time_remaining) / VACANCY_PERIOD
+            // KRN-04 FIX: Cast to u128 to prevent overflow with large values
+            let result = (u128::from(extra_level) * u128::from(time_remaining))
+                         / u128::from(VACANCY_PERIOD);
+            // Safe to cast back since result <= extra_level (division by period)
+            result as u64
         };
 
         floor + bonus

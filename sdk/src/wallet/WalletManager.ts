@@ -40,11 +40,11 @@ export class WalletManager {
   constructor() {
     // Initialize all wallet adapters
     this.adapters = new Map([
-      [WalletType.FREIGHTER, new FreighterAdapter()],
-      [WalletType.ALBEDO, new AlbedoAdapter()],
-      [WalletType.LOBSTR, new LobstrAdapter()],
-      [WalletType.XBULL, new XBullAdapter()],
-      [WalletType.RABET, new RabetAdapter()],
+      [WalletType.FREIGHTER, new FreighterAdapter() as WalletAdapter],
+      [WalletType.ALBEDO, new AlbedoAdapter() as WalletAdapter],
+      [WalletType.LOBSTR, new LobstrAdapter() as WalletAdapter],
+      [WalletType.XBULL, new XBullAdapter() as WalletAdapter],
+      [WalletType.RABET, new RabetAdapter() as WalletAdapter],
     ]);
 
     // Initialize state

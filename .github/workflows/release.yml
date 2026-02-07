@@ -1,0 +1,246 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 0.1.0-beta.1)'
+        required: true
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - testnet
+          - mainnet
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # ============ Build Contracts ============
+  build-contracts:
+    name: Build Contract Artifacts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install Soroban CLI
+        run: |
+          cargo install --locked soroban-cli --features opt
+          soroban --version
+
+      - name: Build Valocracy contract (optimized)
+        working-directory: contracts/valocracy
+        run: soroban contract build --release
+
+      - name: Build Governor contract (optimized)
+        working-directory: contracts/governor
+        run: soroban contract build --release
+
+      - name: Build Treasury contract (optimized)
+        working-directory: contracts/treasury
+        run: soroban contract build --release
+
+      - name: Create contract bundle
+        run: |
+          mkdir -p release/contracts
+          cp contracts/target/wasm32-unknown-unknown/release/*.wasm release/contracts/
+          cd release
+          tar -czf contracts-${{ inputs.version }}.tar.gz contracts/
+          sha256sum contracts-${{ inputs.version }}.tar.gz > contracts-${{ inputs.version }}.tar.gz.sha256
+
+      - name: Upload contract bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: contract-bundle
+          path: |
+            release/contracts-${{ inputs.version }}.tar.gz
+            release/contracts-${{ inputs.version }}.tar.gz.sha256
+          retention-days: 90
+
+  # ============ Build and Publish SDK ============
+  publish-sdk:
+    name: Publish SDK to npm
+    runs-on: ubuntu-latest
+    needs: build-contracts
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        working-directory: sdk
+        run: npm ci
+
+      - name: Update version in package.json
+        working-directory: sdk
+        run: npm version ${{ inputs.version }} --no-git-tag-version
+
+      - name: Build SDK
+        working-directory: sdk
+        run: npm run build
+
+      - name: Run tests
+        working-directory: sdk
+        run: npm test
+        continue-on-error: true
+
+      - name: Publish to npm (beta)
+        if: contains(inputs.version, 'beta') || contains(inputs.version, 'alpha')
+        working-directory: sdk
+        run: npm publish --tag beta --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish to npm (latest)
+        if: ${{ !contains(inputs.version, 'beta') && !contains(inputs.version, 'alpha') }}
+        working-directory: sdk
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create SDK tarball
+        working-directory: sdk
+        run: |
+          npm pack
+          mv karn-protocol-sdk-*.tgz ../release/karn-protocol-sdk-${{ inputs.version }}.tgz
+
+      - name: Upload SDK package
+        uses: actions/upload-artifact@v4
+        with:
+          name: sdk-package
+          path: release/karn-protocol-sdk-${{ inputs.version }}.tgz
+          retention-days: 90
+
+  # ============ Create GitHub Release ============
+  create-release:
+    name: Create GitHub Release
+    runs-on: ubuntu-latest
+    needs: [build-contracts, publish-sdk]
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download contract bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: contract-bundle
+          path: release/
+
+      - name: Download SDK package
+        uses: actions/download-artifact@v4
+        with:
+          name: sdk-package
+          path: release/
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          cat > release_notes.md << EOF
+          # Karn Protocol v${{ inputs.version }}
+
+          **Environment:** ${{ inputs.environment }}
+          **Release Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+
+          ## 📦 Included Packages
+
+          - **Smart Contracts** (Soroban/Rust)
+            - Valocracy Contract
+            - Governor Contract
+            - Treasury Contract
+
+          - **SDK** (TypeScript)
+            - NPM Package: \`@karn/protocol-sdk@${{ inputs.version }}\`
+            - Installation: \`npm install @karn/protocol-sdk@${{ inputs.version }}\`
+
+          ## 📋 Contract Checksums
+
+          \`\`\`
+          $(cat release/contracts-${{ inputs.version }}.tar.gz.sha256)
+          \`\`\`
+
+          ## 🔗 Resources
+
+          - [Documentation](https://github.com/karn-protocol/karn-protocol#readme)
+          - [NPM Package](https://www.npmjs.com/package/@karn/protocol-sdk)
+          - [Examples](https://github.com/karn-protocol/karn-protocol/tree/main/examples)
+
+          ## ⚠️ Security Notice
+
+          EOF
+
+          if [ "${{ inputs.environment }}" == "testnet" ]; then
+            echo "This is a **TESTNET** release. Do not use in production." >> release_notes.md
+          else
+            echo "This is a **MAINNET** release. Please review the security audit report before deploying." >> release_notes.md
+          fi
+
+          echo "Generated release notes"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ inputs.version }}
+          name: Karn Protocol v${{ inputs.version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ contains(inputs.version, 'beta') || contains(inputs.version, 'alpha') }}
+          files: |
+            release/contracts-${{ inputs.version }}.tar.gz
+            release/contracts-${{ inputs.version }}.tar.gz.sha256
+            release/karn-protocol-sdk-${{ inputs.version }}.tgz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============ Deploy Contracts (if mainnet) ============
+  deploy-contracts:
+    name: Deploy Contracts
+    runs-on: ubuntu-latest
+    needs: create-release
+    if: inputs.environment == 'mainnet'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install Soroban CLI
+        run: |
+          cargo install --locked soroban-cli --features opt
+          soroban --version
+
+      - name: Download contract bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: contract-bundle
+          path: release/
+
+      - name: Deploy notice
+        run: |
+          echo "⚠️  MAINNET DEPLOYMENT REQUESTED"
+          echo "This step is intentionally empty to prevent accidental deployments."
+          echo "Deployment should be done manually with proper authorization."
+          echo ""
+          echo "To deploy:"
+          echo "1. Extract contracts from: release/contracts-${{ inputs.version }}.tar.gz"
+          echo "2. Verify checksums match: release/contracts-${{ inputs.version }}.tar.gz.sha256"
+          echo "3. Deploy using: soroban contract deploy --wasm <contract.wasm> --network mainnet"
+          echo "4. Initialize contracts with secure parameters"
+          echo "5. Update environment variables in production"

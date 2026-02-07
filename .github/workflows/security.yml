@@ -1,0 +1,286 @@
+name: Security & Quality
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run weekly on Mondays at 00:00 UTC
+    - cron: '0 0 * * 1'
+
+jobs:
+  # ============ Rust Security ============
+  rust-security:
+    name: Rust Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo-audit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/cargo-audit
+          key: ${{ runner.os }}-cargo-audit
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked || true
+
+      - name: Run security audit
+        working-directory: contracts
+        run: cargo audit --deny warnings
+
+  rust-outdated:
+    name: Check Outdated Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-outdated
+        run: cargo install cargo-outdated --locked || true
+
+      - name: Check outdated dependencies
+        working-directory: contracts
+        run: cargo outdated --exit-code 1
+        continue-on-error: true
+
+  # ============ NPM Security ============
+  npm-security:
+    name: NPM Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run npm audit
+        working-directory: sdk
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+  npm-outdated:
+    name: Check Outdated NPM Packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        working-directory: sdk
+        run: npm ci
+
+      - name: Check outdated packages
+        working-directory: sdk
+        run: npm outdated
+        continue-on-error: true
+
+  # ============ License Compliance ============
+  license-check:
+    name: License Compliance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check Rust license compliance
+        working-directory: contracts
+        run: |
+          echo "Checking for LICENSE files..."
+          find . -name "LICENSE" -o -name "LICENSE-*" -o -name "COPYING"
+
+          echo "Checking Cargo.toml license fields..."
+          grep -r "license.*=" . --include="Cargo.toml" || true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install license checker
+        run: npm install -g license-checker
+
+      - name: Check SDK licenses
+        working-directory: sdk
+        run: |
+          npm ci
+          license-checker --summary
+        continue-on-error: true
+
+  # ============ Code Coverage ============
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin || true
+
+      - name: Generate coverage (Valocracy)
+        working-directory: contracts/valocracy
+        run: cargo tarpaulin --out Xml --output-dir ../../coverage/
+        continue-on-error: true
+
+      - name: Generate coverage (Governor)
+        working-directory: contracts/governor
+        run: cargo tarpaulin --out Xml --output-dir ../../coverage/
+        continue-on-error: true
+
+      - name: Generate coverage (Treasury)
+        working-directory: contracts/treasury
+        run: cargo tarpaulin --out Xml --output-dir ../../coverage/
+        continue-on-error: true
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          directory: ./coverage/
+          flags: contracts
+          name: contract-coverage
+        continue-on-error: true
+
+  # ============ Documentation Check ============
+  docs-check:
+    name: Documentation Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Check Rust documentation
+        working-directory: contracts
+        run: cargo doc --no-deps --all-features
+        env:
+          RUSTDOCFLAGS: "-D warnings"
+
+      - name: Check for README files
+        run: |
+          echo "Checking for documentation files..."
+          find . -name "README.md" -type f
+
+          if [ ! -f "README.md" ]; then
+            echo "❌ Root README.md is missing!"
+            exit 1
+          fi
+
+          if [ ! -f "contracts/README.md" ]; then
+            echo "⚠️  Contracts README.md is missing"
+          fi
+
+          if [ ! -f "sdk/README.md" ]; then
+            echo "⚠️  SDK README.md is missing"
+          fi
+
+  # ============ WASM Size Check ============
+  wasm-size:
+    name: WASM Size Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Install Soroban CLI
+        run: cargo install --locked soroban-cli --features opt || true
+
+      - name: Build contracts
+        working-directory: contracts
+        run: |
+          cd valocracy && soroban contract build --release
+          cd ../governor && soroban contract build --release
+          cd ../treasury && soroban contract build --release
+
+      - name: Analyze WASM sizes
+        run: |
+          echo "## Contract Sizes (WASM)"
+          echo ""
+
+          for wasm in contracts/target/wasm32-unknown-unknown/release/*.wasm; do
+            name=$(basename "$wasm" .wasm)
+            size=$(stat -f%z "$wasm" 2>/dev/null || stat -c%s "$wasm")
+            size_kb=$((size / 1024))
+
+            echo "- **$name**: ${size_kb} KB (${size} bytes)"
+
+            # Warn if > 200KB (Soroban has size limits)
+            if [ $size_kb -gt 200 ]; then
+              echo "  ⚠️  WARNING: Contract is large (>${size_kb}KB)"
+            fi
+          done
+
+      - name: Check contract size limits
+        run: |
+          echo "Checking contract size limits..."
+
+          max_size=262144  # 256 KB max for Soroban
+
+          for wasm in contracts/target/wasm32-unknown-unknown/release/*.wasm; do
+            name=$(basename "$wasm" .wasm)
+            size=$(stat -f%z "$wasm" 2>/dev/null || stat -c%s "$wasm")
+
+            if [ $size -gt $max_size ]; then
+              echo "❌ ERROR: $name exceeds Soroban size limit ($size > $max_size bytes)"
+              exit 1
+            fi
+          done
+
+          echo "✅ All contracts are within size limits"
+
+  # ============ Dependency Tree ============
+  dependency-tree:
+    name: Analyze Dependency Tree
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-tree
+        run: cargo install cargo-tree || true
+
+      - name: Generate dependency tree
+        working-directory: contracts
+        run: |
+          echo "## Valocracy Dependencies"
+          cd valocracy && cargo tree --depth 2
+
+          echo ""
+          echo "## Governor Dependencies"
+          cd ../governor && cargo tree --depth 2
+
+          echo ""
+          echo "## Treasury Dependencies"
+          cd ../treasury && cargo tree --depth 2
+        continue-on-error: true

@@ -827,34 +827,5 @@ export class Client extends ContractClient {
       options
     )
   }
-  public readonly fromJSON = {
-    mint: this.txFromJSON<Result<u64>>,
-        name: this.txFromJSON<string>,
-        revoke: this.txFromJSON<Result<void>>,
-        symbol: this.txFromJSON<string>,
-        founder: this.txFromJSON<Option<string>>,
-        upgrade: this.txFromJSON<Result<void>>,
-        governor: this.txFromJSON<Option<string>>,
-        level_of: this.txFromJSON<u64>,
-        owner_of: this.txFromJSON<Option<string>>,
-        treasury: this.txFromJSON<Option<string>>,
-        expiry_of: this.txFromJSON<u64>,
-        get_votes: this.txFromJSON<u64>,
-        rarity_of: this.txFromJSON<u64>,
-        set_valor: this.txFromJSON<Result<void>>,
-        initialize: this.txFromJSON<Result<void>>,
-        is_verified: this.txFromJSON<boolean>,
-        metadata_of: this.txFromJSON<string>,
-        valor_id_of: this.txFromJSON<Option<u64>>,
-        set_verified: this.txFromJSON<Result<void>>,
-        total_supply: this.txFromJSON<u64>,
-        guardian_mint: this.txFromJSON<Result<u64>>,
-        self_register: this.txFromJSON<Result<u64>>,
-        calculate_mana: this.txFromJSON<u64>,
-        vacancy_period: this.txFromJSON<u64>,
-        update_governor: this.txFromJSON<Result<void>>,
-        update_treasury: this.txFromJSON<Result<void>>,
-        has_voting_power: this.txFromJSON<boolean>,
-        permanent_level_of: this.txFromJSON<u64>
-  }
+
 }

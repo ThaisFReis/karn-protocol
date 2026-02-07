@@ -1,5 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
-import { isConnected, requestAccess, signTransaction } from '@stellar/freighter-api';
+import * as freighter from '@stellar/freighter-api';
+// @ts-ignore
+const { isConnected, requestAccess, signTransaction } = freighter;
 
 interface WalletState {
   isConnected: boolean;

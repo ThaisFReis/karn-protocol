@@ -1,7 +1,6 @@
 {
     "compilerOptions": {
         "target": "es2020",
-        "module": "commonjs",
         "lib": [
             "dom",
             "es2020"
@@ -16,7 +15,18 @@
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
-        "jsx": "react"
+        "module": "node16",
+        "moduleResolution": "node16",
+        "jsx": "react",
+        "baseUrl": ".",
+        "paths": {
+            "@stellar/stellar-sdk/contract": [
+                "./node_modules/@stellar/stellar-sdk/lib/contract/index.d.ts"
+            ],
+            "@stellar/stellar-sdk/rpc": [
+                "./node_modules/@stellar/stellar-sdk/lib/rpc/index.d.ts"
+            ]
+        }
     },
     "include": [
         "src/**/*"

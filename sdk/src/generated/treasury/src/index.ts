@@ -491,23 +491,5 @@ export class Client extends ContractClient {
       options
     )
   }
-  public readonly fromJSON = {
-    asset: this.txFromJSON<Option<string>>,
-        spend: this.txFromJSON<Result<void>>,
-        deposit: this.txFromJSON<Result<void>>,
-        upgrade: this.txFromJSON<Result<void>>,
-        fund_lab: this.txFromJSON<Result<u32>>,
-        governor: this.txFromJSON<Option<string>>,
-        withdraw: this.txFromJSON<Result<i128>>,
-        shares_of: this.txFromJSON<i128>,
-        valocracy: this.txFromJSON<Option<string>>,
-        initialize: this.txFromJSON<Result<void>>,
-        total_assets: this.txFromJSON<i128>,
-        total_shares: this.txFromJSON<i128>,
-        update_governor: this.txFromJSON<Result<void>>,
-        preview_withdraw: this.txFromJSON<Result<i128>>,
-        approve_scholarship: this.txFromJSON<Result<void>>,
-        withdraw_scholarship: this.txFromJSON<Result<void>>,
-        get_claimable_balance: this.txFromJSON<i128>
-  }
+
 }

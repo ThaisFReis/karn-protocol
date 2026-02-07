@@ -424,17 +424,5 @@ export class Client extends ContractClient {
       options
     )
   }
-  public readonly fromJSON = {
-    execute: this.txFromJSON<Result<void>>,
-        propose: this.txFromJSON<Result<u64>>,
-        upgrade: this.txFromJSON<Result<void>>,
-        cast_vote: this.txFromJSON<Result<u64>>,
-        has_voted: this.txFromJSON<boolean>,
-        valocracy: this.txFromJSON<Option<string>>,
-        initialize: this.txFromJSON<Result<void>>,
-        get_proposal: this.txFromJSON<Option<Proposal>>,
-        update_config: this.txFromJSON<Result<void>>,
-        proposal_count: this.txFromJSON<u64>,
-        get_proposal_state: this.txFromJSON<Result<ProposalState>>
-  }
+
 }

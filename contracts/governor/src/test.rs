@@ -88,36 +88,36 @@ fn test_voting_power_snapshot() {
     governor_client.initialize(&valocracy_id);
 
     // Initialize Valocracy
-    let founder = Address::generate(&env);
+    let genesis_members = vec![&env, Address::generate(&env), Address::generate(&env), Address::generate(&env)];
+    let genesis_alice = genesis_members.get(0).unwrap();
     let treasury = Address::generate(&env);
 
     let member_valor_id = 0u64;
-    let valor_ids = vec![&env, 0, 1, 10];
-    let valor_rarities = vec![&env, 5, 100, 20];
+    let valor_ids = vec![&env, 0, 10];
+    let valor_rarities = vec![&env, 5, 100];
     let valor_metadatas = vec![
         &env,
         String::from_str(&env, "Member"),
-        String::from_str(&env, "Founder"),
         String::from_str(&env, "Leadership"),
     ];
-    let founder_valor_id = 1u64;
+    let leadership_valor_id = 10u64;  // Leadership badge for genesis members
     let signer = BytesN::from_array(&env, &[0; 32]);
 
     valocracy_client.initialize(
-        &founder,
+        &genesis_members,
         &governor_id,
         &treasury,
         &member_valor_id,
         &valor_ids,
         &valor_rarities,
         &valor_metadatas,
-        &founder_valor_id,
+        &leadership_valor_id,
         &signer,
     );
 
-    // Founder is automatically registered with permanent level 100
-    // We'll use founder as voter since they have UserStats
-    let voter = founder.clone();
+    // Genesis members are automatically registered with Leadership badge (rarity 100)
+    // We'll use genesis_alice as voter since they have UserStats
+    let voter = genesis_alice.clone();
 
     // Create proposal
     let proposal_id = 1u64;
@@ -164,31 +164,31 @@ fn test_flash_voting_prevented() {
     governor_client.initialize(&valocracy_id);
 
     // Initialize Valocracy
-    let founder = Address::generate(&env);
+    let genesis_members = vec![&env, Address::generate(&env), Address::generate(&env), Address::generate(&env)];
+    let genesis_alice = genesis_members.get(0).unwrap();
     let treasury = Address::generate(&env);
 
     let member_valor_id = 0u64;
-    let valor_ids = vec![&env, 0, 1, 10, 70];
-    let valor_rarities = vec![&env, 5, 100, 20, 50];
+    let valor_ids = vec![&env, 0, 10, 70];
+    let valor_rarities = vec![&env, 5, 100, 50];
     let valor_metadatas = vec![
         &env,
         String::from_str(&env, "Member"),
-        String::from_str(&env, "Founder"),
         String::from_str(&env, "Leadership"),
         String::from_str(&env, "Governance"),
     ];
-    let founder_valor_id = 1u64;
+    let leadership_valor_id = 10u64;  // Leadership badge for genesis members
     let signer = BytesN::from_array(&env, &[0; 32]);
 
     valocracy_client.initialize(
-        &founder,
+        &genesis_members,
         &governor_id,
         &treasury,
         &member_valor_id,
         &valor_ids,
         &valor_rarities,
         &valor_metadatas,
-        &founder_valor_id,
+        &leadership_valor_id,
         &signer,
     );
 
@@ -196,22 +196,22 @@ fn test_flash_voting_prevented() {
     let proposal_id = 1u64;
     let actions = vec![&env];
     governor_client.propose(
-        &founder,
+        &genesis_alice,
         &String::from_str(&env, "Important Governance Decision"),
         &actions,
     );
 
     // Get snapshot Mana from proposal start time
     let proposal = governor_client.get_proposal(&proposal_id).unwrap();
-    let snapshot_mana = valocracy_client.get_votes_at(&founder, &proposal.start_time);
+    let snapshot_mana = valocracy_client.get_votes_at(&genesis_alice, &proposal.start_time);
 
     // Fast forward to voting period
     env.ledger().with_mut(|li| {
         li.timestamp += 86401; // 1 day + 1 second (past voting delay)
     });
 
-    // Founder votes
-    let voting_power_used = governor_client.cast_vote(&founder, &proposal_id, &true);
+    // Genesis member votes
+    let voting_power_used = governor_client.cast_vote(&genesis_alice, &proposal_id, &true);
 
     // KRN-02 VERIFICATION: Uses snapshot from proposal creation time
     // This prevents flash voting - even if power changes mid-proposal,
@@ -237,30 +237,30 @@ fn test_consistent_voting_power_across_voters() {
     governor_client.initialize(&valocracy_id);
 
     // Initialize Valocracy
-    let founder = Address::generate(&env);
+    let genesis_members = vec![&env, Address::generate(&env), Address::generate(&env), Address::generate(&env)];
+    let genesis_alice = genesis_members.get(0).unwrap();
     let treasury = Address::generate(&env);
 
     let member_valor_id = 0u64;
-    let valor_ids = vec![&env, 0, 1, 10];
-    let valor_rarities = vec![&env, 5, 100, 30];
+    let valor_ids = vec![&env, 0, 10];
+    let valor_rarities = vec![&env, 5, 100];
     let valor_metadatas = vec![
         &env,
         String::from_str(&env, "Member"),
-        String::from_str(&env, "Founder"),
         String::from_str(&env, "Leadership"),
     ];
-    let founder_valor_id = 1u64;
+    let leadership_valor_id = 10u64;  // Leadership badge for genesis members
     let signer = BytesN::from_array(&env, &[0; 32]);
 
     valocracy_client.initialize(
-        &founder,
+        &genesis_members,
         &governor_id,
         &treasury,
         &member_valor_id,
         &valor_ids,
         &valor_rarities,
         &valor_metadatas,
-        &founder_valor_id,
+        &leadership_valor_id,
         &signer,
     );
 
@@ -268,21 +268,21 @@ fn test_consistent_voting_power_across_voters() {
     let proposal_id = 1u64;
     let actions = vec![&env];
     governor_client.propose(
-        &founder,
+        &genesis_alice,
         &String::from_str(&env, "Test Consistency"),
         &actions,
     );
 
     // Get snapshot Mana from proposal start time
     let proposal = governor_client.get_proposal(&proposal_id).unwrap();
-    let snapshot_mana = valocracy_client.get_votes_at(&founder, &proposal.start_time);
+    let snapshot_mana = valocracy_client.get_votes_at(&genesis_alice, &proposal.start_time);
 
     // Vote immediately (early vote) - past voting delay
     env.ledger().with_mut(|li| {
         li.timestamp += 86401;
     });
 
-    let early_power = governor_client.cast_vote(&founder, &proposal_id, &true);
+    let early_power = governor_client.cast_vote(&genesis_alice, &proposal_id, &true);
 
     // KRN-02 VERIFICATION: Voting power equals snapshot at proposal creation time
     // The timestamp used for Mana calculation is proposal.start_time, not current time
@@ -306,42 +306,43 @@ fn test_single_vote_cannot_pass() {
     governor_client.initialize(&valocracy_id);
 
     // Initialize Valocracy with founder
-    let founder = Address::generate(&env);
+    let genesis_members = vec![&env, Address::generate(&env), Address::generate(&env), Address::generate(&env)];
+    let genesis_alice = genesis_members.get(0).unwrap();
     let treasury = Address::generate(&env);
 
     let member_valor_id = 0u64;
-    let valor_ids = vec![&env, 0, 1];
+    let valor_ids = vec![&env, 0, 10];
     let valor_rarities = vec![&env, 5, 100];
     let valor_metadatas = vec![
         &env,
         String::from_str(&env, "Member"),
-        String::from_str(&env, "Founder"),
+        String::from_str(&env, "Leadership"),
     ];
-    let founder_valor_id = 1u64;
+    let leadership_valor_id = 10u64;  // Leadership badge for genesis members
     let signer = BytesN::from_array(&env, &[0; 32]);
 
     valocracy_client.initialize(
-        &founder,
+        &genesis_members,
         &governor_id,
         &treasury,
         &member_valor_id,
         &valor_ids,
         &valor_rarities,
         &valor_metadatas,
-        &founder_valor_id,
+        &leadership_valor_id,
         &signer,
     );
 
-    // Founder has 100 Mana, total supply = 1 token
-    // total_mana() = 1 * 5 (MEMBER_FLOOR) = 5
+    // Genesis members have Leadership badge (rarity 100), total supply = 3 tokens
+    // total_mana() = 3 * 5 (MEMBER_FLOOR) = 15
     let total_mana = valocracy_client.total_mana();
-    assert_eq!(total_mana, 5);
+    assert_eq!(total_mana, 15);
 
     // Create proposal
     let proposal_id = 1u64;
     let actions = vec![&env];
     governor_client.propose(
-        &founder,
+        &genesis_alice,
         &String::from_str(&env, "Single Vote Test"),
         &actions,
     );
@@ -351,8 +352,8 @@ fn test_single_vote_cannot_pass() {
         li.timestamp += 86401;
     });
 
-    // Founder votes FOR (100 Mana)
-    governor_client.cast_vote(&founder, &proposal_id, &true);
+    // Genesis member votes FOR (100 Mana)
+    governor_client.cast_vote(&genesis_alice, &proposal_id, &true);
 
     // Fast forward past voting period
     env.ledger().with_mut(|li| {
@@ -363,14 +364,14 @@ fn test_single_vote_cannot_pass() {
     let state = governor_client.get_proposal_state(&proposal_id);
 
     // KRN-03 VERIFICATION: Single vote should FAIL due to participation threshold
-    // participation = 100 / 5 = 2000% (but this is because total_mana is underestimated)
-    // Actually, with only 1 token, participation should be high
+    // participation = 100 / 15 = 666% (but this is because total_mana is underestimated)
+    // Actually, with only 3 tokens (genesis members), participation should be high
     // But the test demonstrates the check is in place
 
     // Note: This test would fail in real scenario with multiple users
     // For demonstration, let's verify the proposal has the participation check
     let proposal = governor_client.get_proposal(&proposal_id).unwrap();
-    assert_eq!(proposal.total_mana_at_creation, 5); // Snapshot taken
+    assert_eq!(proposal.total_mana_at_creation, 15); // Snapshot taken (3 genesis members × 5 floor)
 }
 
 #[test]
@@ -388,29 +389,30 @@ fn test_low_participation_defeats_proposal() {
     governor_client.initialize(&valocracy_id);
 
     // Initialize Valocracy
-    let founder = Address::generate(&env);
+    let genesis_members = vec![&env, Address::generate(&env), Address::generate(&env), Address::generate(&env)];
+    let genesis_alice = genesis_members.get(0).unwrap();
     let treasury = Address::generate(&env);
 
     let member_valor_id = 0u64;
-    let valor_ids = vec![&env, 0, 1];
+    let valor_ids = vec![&env, 0, 10];
     let valor_rarities = vec![&env, 5, 100];
     let valor_metadatas = vec![
         &env,
         String::from_str(&env, "Member"),
-        String::from_str(&env, "Founder"),
+        String::from_str(&env, "Leadership"),
     ];
-    let founder_valor_id = 1u64;
+    let leadership_valor_id = 10u64;  // Leadership badge for genesis members
     let signer = BytesN::from_array(&env, &[0; 32]);
 
     valocracy_client.initialize(
-        &founder,
+        &genesis_members,
         &governor_id,
         &treasury,
         &member_valor_id,
         &valor_ids,
         &valor_rarities,
         &valor_metadatas,
-        &founder_valor_id,
+        &leadership_valor_id,
         &signer,
     );
 
@@ -429,7 +431,7 @@ fn test_low_participation_defeats_proposal() {
     let proposal_id = 1u64;
     let actions = vec![&env];
     governor_client.propose(
-        &founder,
+        &genesis_alice,
         &String::from_str(&env, "Test Low Participation"),
         &actions,
     );
@@ -439,7 +441,7 @@ fn test_low_participation_defeats_proposal() {
         li.timestamp += 86401;
     });
 
-    governor_client.cast_vote(&founder, &proposal_id, &true);
+    governor_client.cast_vote(&genesis_alice, &proposal_id, &true);
 
     // End voting
     env.ledger().with_mut(|li| {

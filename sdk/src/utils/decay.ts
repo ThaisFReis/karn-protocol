@@ -27,10 +27,7 @@ export function calculateMana(
 ): number {
   // 1. Calculate decaying portion
   const decayingLevel = Math.max(0, level - permanentLevel);
-  // If no decayable level, mana is just permanent + floor? 
-  // Wait, contract logic:
-  // DecayingLevel = Level - PermanentLevel
-  // If Level < PermanentLevel? Should not happen.
+
   
   // 2. Calculate time remaining
   const timeRemaining = Math.max(0, expiry - currentTimestamp);
@@ -42,12 +39,6 @@ export function calculateMana(
   
   // 4. Default floor logic
   // Contract: Mana = MemberFloor + bonus + PermanentLevel
-  // Wait, let's verify contract logic.
-  // valocracy/src/lib.rs:
-  // let decaying_level = level.checked_sub(permanent_level).unwrap_or(0);
-  // let bonus = decaying_level * time_remaining / VACANCY_PERIOD;
-  // let mana = MEMBER_FLOOR + bonus + permanent_level;
-  
-  // Correct.
+
   return MEMBER_FLOOR + bonus + permanentLevel;
 }

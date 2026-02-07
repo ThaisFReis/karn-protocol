@@ -26,7 +26,7 @@ export interface UseGovernorResult {
  * @param proposalId - The proposal ID to query (optional)
  * @returns Object containing proposal data, loading state, and refetch function
  */
- *
+
 
 export function useGovernor(proposalId?: bigint): UseGovernorResult {
   const { governor } = useKarn();

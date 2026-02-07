@@ -13,26 +13,9 @@ export interface UseTreasuryResult {
  *
  * @param member - The member address to query (optional)
  * @returns Object containing claimable balance, loading state, and refetch function
- *
- * @example
- * ```tsx
- * function ScholarshipBalance() {
- *   const { address } = useWallet();
- *   const { claimableBalance, isLoading, error } = useTreasury(address);
- *
- *   if (isLoading) return <div>Loading balance...</div>;
- *   if (error) return <div>Error: {error.message}</div>;
- *
- *   return (
- *     <div>
- *       <h3>Your Scholarship Balance</h3>
- *       <p>{claimableBalance?.toString() || '0'} stroops</p>
- *       <p>{Number(claimableBalance || 0n) / 10_000_000} XLM</p>
- *     </div>
- *   );
- * }
- * ```
  */
+
+
 export function useTreasury(member?: string): UseTreasuryResult {
   const { treasury } = useKarn();
   const [claimableBalance, setClaimableBalance] = useState<bigint | null>(null);
@@ -63,7 +46,7 @@ export function useTreasury(member?: string): UseTreasuryResult {
 
   useEffect(() => {
     fetchData();
-  }, [member]); // Re-fetch when member address changes
+  }, [member]);
 
   return {
     claimableBalance,

@@ -15,8 +15,8 @@ use soroban_sdk::xdr::ToXdr;
 use errors::ValocracyError;
 use storage::{
     get_governor, get_treasury, get_total_supply, get_user_stats, get_valor,
-    get_token_valor_id, get_token_owner, get_founder, get_member_valor_id,
-    is_initialized, set_initialized, set_founder, set_governor, set_treasury,
+    get_token_valor_id, get_token_owner, get_member_valor_id,
+    is_initialized, set_initialized, set_governor, set_treasury,
     set_total_supply, set_user_stats, set_valor, set_token_valor_id, set_token_owner,
     set_member_valor_id, remove_token_owner, remove_token_valor_id,
     extend_instance_ttl, get_signer, set_signer, is_nonce_used, set_nonce_used,
@@ -65,10 +65,11 @@ impl ValocracyContract {
     /// * `valor_ids` - List of valor IDs to register
     /// * `valor_rarities` - List of rarities (parallel to valor_ids)
     /// * `valor_metadatas` - List of metadata strings (parallel to valor_ids)
-    /// * `founder_valor_id` - Which valor_id is the Founder badge
+    /// * `genesis_members` - Initial core team members (3-7 recommended)
+    /// * `leadership_valor_id` - Which valor_id is the Leadership badge for genesis members
     pub fn initialize(
         env: Env,
-        founder: Address,
+        genesis_members: Vec<Address>,
         governor: Address,
         treasury: Address,
         // name: String, // Removed to fit 10 args limit
@@ -77,15 +78,22 @@ impl ValocracyContract {
         valor_ids: Vec<u64>,
         valor_rarities: Vec<u64>,
         valor_metadatas: Vec<String>,
-        founder_valor_id: u64,
+        leadership_valor_id: u64,
         signer: BytesN<32>,
     ) -> Result<(), ValocracyError> {
         if is_initialized(&env) {
             return Err(ValocracyError::AlreadyInitialized);
         }
 
+        // Require at least one genesis member for initialization auth
+        if genesis_members.is_empty() {
+            return Err(ValocracyError::NotAuthorized);
+        }
+
+        // First genesis member must authorize the initialization
+        genesis_members.get(0).unwrap().require_auth();
+
         set_initialized(&env);
-        set_founder(&env, &founder);
         set_governor(&env, &governor);
         set_treasury(&env, &treasury);
         set_signer(&env, &signer);
@@ -104,34 +112,44 @@ impl ValocracyContract {
             set_valor(&env, vid, &valor);
         }
 
-        // Mint the Founder badge to the founder address
-        let founder_valor = get_valor(&env, founder_valor_id)
+        // Get leadership badge details
+        let leadership_valor = get_valor(&env, leadership_valor_id)
             .ok_or(ValocracyError::NonExistentValor)?;
-        let founder_rarity = founder_valor.rarity;
+        let leadership_rarity = leadership_valor.rarity;
 
         let current_time = env.ledger().timestamp();
-        let founder_stats = UserStats {
-            level: founder_rarity,
-            permanent_level: founder_rarity,
-            expiry: current_time + VACANCY_PERIOD,
-            verified: false, // Founder must verify identity like everyone else
-        };
-        set_user_stats(&env, &founder, &founder_stats);
+        let mut current_token_id = 1u64;
 
-        let token_id = 1u64;
-        set_total_supply(&env, token_id);
-        set_token_valor_id(&env, token_id, founder_valor_id);
-        set_token_owner(&env, token_id, &founder);
+        // Mint leadership badge to all genesis members
+        // CRITICAL: No permanent_level - all badges decay equally!
+        for member in genesis_members.iter() {
+            let member_stats = UserStats {
+                level: leadership_rarity,
+                permanent_level: 0,  // NO PERMANENT POWER - must contribute to maintain influence!
+                expiry: current_time + VACANCY_PERIOD,
+                verified: false,  // Genesis members must verify identity like everyone else
+            };
+            set_user_stats(&env, &member, &member_stats);
+
+            set_token_valor_id(&env, current_token_id, leadership_valor_id);
+            set_token_owner(&env, current_token_id, &member);
+
+            env.events().publish(
+                (Symbol::new(&env, "mint"), member),
+                (current_token_id, leadership_valor_id, leadership_rarity),
+            );
+
+            current_token_id += 1;
+        }
+
+        // Update total supply to reflect all minted genesis badges
+        set_total_supply(&env, current_token_id - 1);
 
         extend_instance_ttl(&env);
 
         env.events().publish(
             (Symbol::new(&env, "initialized"),),
-            founder.clone(),
-        );
-        env.events().publish(
-            (Symbol::new(&env, "mint"), founder),
-            (token_id, founder_valor_id, founder_rarity),
+            genesis_members.len(),
         );
 
         Ok(())
@@ -396,11 +414,6 @@ impl ValocracyContract {
     /// Get the vacancy period (180 days in seconds)
     pub fn vacancy_period(_env: Env) -> u64 {
         VACANCY_PERIOD
-    }
-
-    /// Get the founder address
-    pub fn founder(env: Env) -> Option<Address> {
-        get_founder(&env)
     }
 
     /// Get the governor contract address

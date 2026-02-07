@@ -11,7 +11,7 @@
 #![cfg(test)]
 
 use soroban_sdk::{
-    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation},
+    testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, Ledger},
     Address, Env, String, Vec,
 };
 

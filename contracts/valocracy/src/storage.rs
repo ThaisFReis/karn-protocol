@@ -10,8 +10,6 @@ use crate::types::{UserStats, Valor};
 pub enum DataKey {
     /// Whether the contract has been initialized
     Initialized,
-    /// Founder address (receives permanent Founder badge)
-    Founder,
     /// Governor contract address
     Governor,
     /// Treasury contract address
@@ -64,16 +62,6 @@ pub fn is_initialized(env: &Env) -> bool {
 
 pub fn set_initialized(env: &Env) {
     env.storage().instance().set(&DataKey::Initialized, &true);
-}
-
-// ============ Founder Storage ============
-
-pub fn get_founder(env: &Env) -> Option<Address> {
-    env.storage().instance().get(&DataKey::Founder)
-}
-
-pub fn set_founder(env: &Env, founder: &Address) {
-    env.storage().instance().set(&DataKey::Founder, founder);
 }
 
 // ============ MemberValorId Storage ============

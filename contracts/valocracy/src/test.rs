@@ -24,68 +24,73 @@ fn mint_with_result(env: &Env, client: &ValocracyContractClient, minter: &Addres
 
 fn create_full_init_args(env: &Env) -> (u64, Vec<u64>, Vec<u64>, Vec<String>, u64, BytesN<32>) {
     let member_valor_id = 0;
-    
-    // Setup Valors: Member(0), Founder(1), Leadership(10), Track(20), Governance(70)
-    let ids = vec![env, 0, 1, 10, 20, 70];
-    let rarities = vec![env, 5, 100, 20, 10, 50];
-    let metadatas = vec![env, 
-        String::from_str(env, "Member"), 
-        String::from_str(env, "Founder"),
-        String::from_str(env, "Leadership"),
+
+    // Setup Valors: Member(0), Leadership(10), Track(20), Governance(70)
+    // Note: No more "Founder" badge - genesis members get Leadership badges
+    let ids = vec![env, 0, 10, 20, 70];
+    let rarities = vec![env, 5, 100, 20, 50];
+    let metadatas = vec![env,
+        String::from_str(env, "Member"),
+        String::from_str(env, "Leadership"),  // Genesis council gets this
         String::from_str(env, "Track"),
         String::from_str(env, "Governance")
     ];
-    
-    let founder_valor_id = 1;
+
+    let leadership_valor_id = 10;  // Genesis members get Leadership badge
     let signer = BytesN::from_array(env, &[0; 32]);
-    
-    (member_valor_id, ids, rarities, metadatas, founder_valor_id, signer)
+
+    (member_valor_id, ids, rarities, metadatas, leadership_valor_id, signer)
+}
+
+/// Helper to create genesis members vector for tests
+fn create_genesis_members(env: &Env) -> Vec<Address> {
+    let alice = Address::generate(env);
+    let bob = Address::generate(env);
+    let carol = Address::generate(env);
+    vec![env, alice, bob, carol]
 }
 
 #[test]
 fn test_mint_authorization() {
     let env = Env::default();
     env.mock_all_auths();
-    
+
     let contract_id = env.register_contract(None, ValocracyContract);
     let client = ValocracyContractClient::new(&env, &contract_id);
-    
+
     let governor = Address::generate(&env);
     let treasury = Address::generate(&env);
-    let founder = Address::generate(&env);
-    
-    let (m_id, ids, rars, metas, f_id, signer) = create_full_init_args(&env);
-    
-    client.initialize(&founder, &governor, &treasury, &m_id, &ids, &rars, &metas, &f_id, &signer);
-    
+
+    // Genesis council: 3 initial members
+    let genesis_alice = Address::generate(&env);
+    let genesis_bob = Address::generate(&env);
+    let genesis_carol = Address::generate(&env);
+    let genesis_members = vec![&env, genesis_alice.clone(), genesis_bob.clone(), genesis_carol.clone()];
+
+    let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
+
+    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
+
     let user = Address::generate(&env);
-    
-    // Test 1: Founder badge (ID 1) cannot be minted by anyone
-    let res = mint_with_result(&env, &client, &governor, &user, 1);
-    assert_eq!(res, Err(ValocracyError::BadgeNotMintable));
-    
-    // Test 2: Member badge (ID 0) cannot be minted directly (use self_register)
+
+    // Test 1: Member badge (ID 0) cannot be minted directly (use self_register)
     let res = mint_with_result(&env, &client, &governor, &user, 0);
     assert_eq!(res, Err(ValocracyError::BadgeNotMintable));
-    
-    // Test 3: Governance badge (ID 70) requires Governor
-    let res = mint_with_result(&env, &client, &founder, &user, 70);
+
+    // Test 2: Governance badge (ID 70) requires Governor
+    let res = mint_with_result(&env, &client, &genesis_alice, &user, 70);
     assert_eq!(res, Err(ValocracyError::MintNotAuthorized));
-    
+
     let res = mint_with_result(&env, &client, &governor, &user, 70);
     assert!(res.is_ok());
-    
-    // Test 4: Track badge (ID 20) requires Governor or Leadership
-    // Founder has level 100 > 10, so should be able to mint track badges?
-    // Let's check get_badge_category implementation logic:
-    // Track => Governor OR minter.level >= 10
-    
-    // Founder stats:
-    assert!(client.level_of(&founder) >= 10);
-    
-    let res = mint_with_result(&env, &client, &founder, &user, 20);
+
+    // Test 3: Track badge (ID 20) requires Governor or Leadership
+    // Genesis members have level 100 (Leadership badge) > 10, so can mint track badges
+    assert!(client.level_of(&genesis_alice) >= 10);
+
+    let res = mint_with_result(&env, &client, &genesis_alice, &user, 20);
     assert!(res.is_ok());
-    
+
     // Random user (level 0) cannot mint track badge
     let random = Address::generate(&env);
     let res = mint_with_result(&env, &client, &random, &user, 20);
@@ -96,23 +101,24 @@ fn test_mint_authorization() {
 fn test_verification_flow() {
     let env = Env::default();
     env.mock_all_auths();
-    
+
     let contract_id = env.register_contract(None, ValocracyContract);
     let client = ValocracyContractClient::new(&env, &contract_id);
-    
+
     let governor = Address::generate(&env);
     let treasury = Address::generate(&env);
-    let founder = Address::generate(&env);
-    
-    let (m_id, ids, rars, metas, f_id, signer) = create_full_init_args(&env);
-    client.initialize(&founder, &governor, &treasury, &m_id, &ids, &rars, &metas, &f_id, &signer);
-    
-    // Verify default state
-    assert_eq!(client.is_verified(&founder), false);
-    
+    let genesis_members = create_genesis_members(&env);
+    let genesis_alice = genesis_members.get(0).unwrap();
+
+    let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
+    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
+
+    // Verify default state - genesis members start unverified
+    assert_eq!(client.is_verified(&genesis_alice), false);
+
     // Set verified
-    client.set_verified(&founder, &true);
-    assert_eq!(client.is_verified(&founder), true);
+    client.set_verified(&genesis_alice, &true);
+    assert_eq!(client.is_verified(&genesis_alice), true);
 }
 
 #[test]
@@ -125,10 +131,11 @@ fn test_upgrade_auth() {
     
     let governor = Address::generate(&env);
     let treasury = Address::generate(&env);
-    let founder = Address::generate(&env);
+    let genesis_members = create_genesis_members(&env);
+    let genesis_alice = genesis_members.get(0).unwrap();
     
-    let (m_id, ids, rars, metas, f_id, signer) = create_full_init_args(&env);
-    client.initialize(&founder, &governor, &treasury, &m_id, &ids, &rars, &metas, &f_id, &signer);
+    let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
+    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
     
     let new_hash = BytesN::from_array(&env, &[0; 32]);
     
@@ -252,13 +259,14 @@ fn test_guardian_mint_requires_recipient_auth() {
     let contract_id = env.register_contract(None, ValocracyContract);
     let client = ValocracyContractClient::new(&env, &contract_id);
 
-    let founder = Address::generate(&env);
+    let genesis_members = create_genesis_members(&env);
+    let genesis_alice = genesis_members.get(0).unwrap();
     let governor = Address::generate(&env);
     let treasury = Address::generate(&env);
-    let (m_id, ids, rars, metas, f_id, signer) = create_full_init_args(&env);
+    let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
 
     env.mock_all_auths();
-    client.initialize(&founder, &governor, &treasury, &m_id, &ids, &rars, &metas, &f_id, &signer);
+    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
 
     // Create a valid signature for Alice
     let alice = Address::generate(&env);
@@ -288,13 +296,14 @@ fn test_guardian_mint_auth_check_passes_with_mock() {
     let contract_id = env.register_contract(None, ValocracyContract);
     let client = ValocracyContractClient::new(&env, &contract_id);
 
-    let founder = Address::generate(&env);
+    let genesis_members = create_genesis_members(&env);
+    let genesis_alice = genesis_members.get(0).unwrap();
     let governor = Address::generate(&env);
     let treasury = Address::generate(&env);
-    let (m_id, ids, rars, metas, f_id, signer) = create_full_init_args(&env);
+    let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
 
     env.mock_all_auths();
-    client.initialize(&founder, &governor, &treasury, &m_id, &ids, &rars, &metas, &f_id, &signer);
+    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
 
     // Create a valid scenario where Alice authorizes
     let alice = Address::generate(&env);
@@ -333,18 +342,19 @@ fn test_get_votes_at_historical() {
     let contract_id = env.register_contract(None, ValocracyContract);
     let client = ValocracyContractClient::new(&env, &contract_id);
 
-    let founder = Address::generate(&env);
+    let genesis_members = create_genesis_members(&env);
+    let genesis_alice = genesis_members.get(0).unwrap();
     let governor = Address::generate(&env);
     let treasury = Address::generate(&env);
 
-    let (m_id, ids, rars, metas, f_id, signer) = create_full_init_args(&env);
+    let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
 
     let t0 = env.ledger().timestamp();
-    client.initialize(&founder, &governor, &treasury, &m_id, &ids, &rars, &metas, &f_id, &signer);
+    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
 
     // Verify get_votes_at returns same result as get_votes for current time
-    let current_mana = client.get_votes(&founder);
-    let mana_at_current = client.get_votes_at(&founder, &env.ledger().timestamp());
+    let current_mana = client.get_votes(&genesis_alice);
+    let mana_at_current = client.get_votes_at(&genesis_alice, &env.ledger().timestamp());
     assert_eq!(current_mana, mana_at_current);
 
     // Test at different future timestamps
@@ -352,7 +362,7 @@ fn test_get_votes_at_historical() {
     // for the same timestamp, regardless of when it's called
 
     let future_time_1 = t0 + 1_000_000;
-    let mana_1a = client.get_votes_at(&founder, &future_time_1);
+    let mana_1a = client.get_votes_at(&genesis_alice, &future_time_1);
 
     // Fast forward ledger time
     env.ledger().with_mut(|li| {
@@ -360,49 +370,51 @@ fn test_get_votes_at_historical() {
     });
 
     // Query same timestamp again - should get same result
-    let mana_1b = client.get_votes_at(&founder, &future_time_1);
+    let mana_1b = client.get_votes_at(&genesis_alice, &future_time_1);
     assert_eq!(mana_1a, mana_1b); // Deterministic!
 
-    // Test with a very far future time
+    // Test with a very far future time (way past decay period)
     let far_future = t0 + 100_000_000;
-    let mana_far = client.get_votes_at(&founder, &far_future);
+    let mana_far = client.get_votes_at(&genesis_alice, &far_future);
 
-    // Should be >= permanent_level (founder has permanent 100)
-    assert!(mana_far >= 100);
+    // Genesis members decay to member floor (5) like everyone else - no permanent power!
+    assert_eq!(mana_far, 5);
 }
 
 #[test]
-fn test_get_votes_at_with_permanent_level() {
+fn test_genesis_members_badges_decay() {
     let env = Env::default();
     env.mock_all_auths();
 
     let contract_id = env.register_contract(None, ValocracyContract);
     let client = ValocracyContractClient::new(&env, &contract_id);
 
-    let founder = Address::generate(&env);
+    let genesis_members = create_genesis_members(&env);
+    let genesis_alice = genesis_members.get(0).unwrap();
     let governor = Address::generate(&env);
     let treasury = Address::generate(&env);
 
-    let (m_id, ids, rars, metas, f_id, signer) = create_full_init_args(&env);
-    client.initialize(&founder, &governor, &treasury, &m_id, &ids, &rars, &metas, &f_id, &signer);
+    let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
+    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
 
-    // Founder has permanent level 100 (never decays)
+    // CRITICAL: Genesis members have NO permanent level - their badges decay!
     let t0 = env.ledger().timestamp();
-    assert_eq!(client.level_of(&founder), 100);
+    assert_eq!(client.level_of(&genesis_alice), 100);
 
-    // At any timestamp, Founder should have 100 Mana
-    let mana_now = client.get_votes_at(&founder, &t0);
+    // At t0: Full Mana from Leadership badge (100)
+    let mana_now = client.get_votes_at(&genesis_alice, &t0);
     assert_eq!(mana_now, 100);
 
-    // 180 days later: still 100 (permanent)
+    // 180 days later: Decayed to member floor (5)
+    // This proves NO ONE has permanent power - even genesis members!
     let t_future = t0 + 15_552_000;
-    let mana_future = client.get_votes_at(&founder, &t_future);
-    assert_eq!(mana_future, 100);
+    let mana_future = client.get_votes_at(&genesis_alice, &t_future);
+    assert_eq!(mana_future, 5);  // Member floor only!
 
-    // 10 years later: still 100
+    // 10 years later: Still just member floor
     let t_far_future = t0 + (365 * 10 * 24 * 60 * 60);
-    let mana_far = client.get_votes_at(&founder, &t_far_future);
-    assert_eq!(mana_far, 100);
+    let mana_far = client.get_votes_at(&genesis_alice, &t_far_future);
+    assert_eq!(mana_far, 5);  // No permanent power!
 }
 
 #[test]
@@ -413,13 +425,14 @@ fn test_get_votes_at_zero_for_unregistered() {
     let contract_id = env.register_contract(None, ValocracyContract);
     let client = ValocracyContractClient::new(&env, &contract_id);
 
-    let founder = Address::generate(&env);
+    let genesis_members = create_genesis_members(&env);
+    let genesis_alice = genesis_members.get(0).unwrap();
     let governor = Address::generate(&env);
     let treasury = Address::generate(&env);
     let random_user = Address::generate(&env);
 
-    let (m_id, ids, rars, metas, f_id, signer) = create_full_init_args(&env);
-    client.initialize(&founder, &governor, &treasury, &m_id, &ids, &rars, &metas, &f_id, &signer);
+    let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
+    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
 
     // Unregistered user should have 0 Mana at any timestamp
     let t0 = env.ledger().timestamp();

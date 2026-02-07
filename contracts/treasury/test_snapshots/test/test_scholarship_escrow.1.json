@@ -436,6 +436,21 @@
                         "key": {
                           "vec": [
                             {
+                              "symbol": "RestrictedReserves"
+                            }
+                          ]
+                        },
+                        "val": {
+                          "i128": {
+                            "hi": 0,
+                            "lo": 4000
+                          }
+                        }
+                      },
+                      {
+                        "key": {
+                          "vec": [
+                            {
                               "symbol": "TotalShares"
                             }
                           ]

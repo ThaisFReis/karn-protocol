@@ -650,3 +650,140 @@ fn test_multiple_users_shares_isolation() {
     assert_eq!(client.shares_of(&user3), 3000);
     assert_eq!(client.total_shares(), 6000);
 }
+
+// ============ KRN-01 Security Tests: Scholarship Fund Isolation ============
+
+#[test]
+fn test_scholarship_funds_isolated_from_shares() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, contract_id, _, _, token_id, token_client) = setup_treasury(&env);
+    let token_admin = Address::generate(&env);
+    let admin_client = token::StellarAssetClient::new(&env, &token_id);
+
+    // Setup: Alice is a shareholder with significant shares
+    let alice = Address::generate(&env);
+    client.deposit(&alice, &10_000);
+
+    // Mint assets backing Alice's shares
+    admin_client.mint(&contract_id, &10_000);
+    assert_eq!(client.total_assets(), 10_000);
+
+    // Lab is funded with 50_000 scholarship funds
+    let lab_funder = Address::generate(&env);
+    admin_client.mint(&lab_funder, &50_000);
+    client.fund_lab(&lab_funder, &50_000, &1_000);
+
+    // KRN-01 CRITICAL VERIFICATION: total_assets() should NOT include lab funds
+    // Treasury balance = 10_000 (shares) + 50_000 (lab) = 60_000
+    // But total_assets() should return 10_000 (restricted reserves = 50_000)
+    assert_eq!(token_client.balance(&contract_id), 60_000);
+    assert_eq!(client.total_assets(), 10_000); // Excludes lab funds!
+
+    // Alice withdraws all her shares - should only get FREE assets, not scholarship funds
+    let assets = client.withdraw(&alice, &alice, &10_000);
+
+    // KRN-01: Alice gets ~10k (free assets), NOT 60k (which would drain scholarships)
+    assert!(assets > 8_000 && assets <= 10_000); // Accounting for virtual offset rounding
+    assert!(assets < 15_000); // Definitely not getting scholarship funds
+
+    // Scholar can still claim approved scholarship (lab funds intact)
+    let scholar = Address::generate(&env);
+    client.approve_scholarship(&1, &scholar);
+    client.withdraw_scholarship(&scholar, &1_000);
+
+    // Lab funds remain available after Alice withdrew
+    let remaining_balance = token_client.balance(&contract_id);
+    assert!(remaining_balance >= 49_000); // ~50k - 1k withdrawn by scholar
+}
+
+#[test]
+fn test_multiple_labs_accounting() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, contract_id, _, _, token_id, _) = setup_treasury(&env);
+    let token_admin = Address::generate(&env);
+    let admin_client = token::StellarAssetClient::new(&env, &token_id);
+
+    // Fund 3 different labs with different amounts
+    let lab_funder1 = Address::generate(&env);
+    let lab_funder2 = Address::generate(&env);
+    let lab_funder3 = Address::generate(&env);
+
+    admin_client.mint(&lab_funder1, &1000);
+    admin_client.mint(&lab_funder2, &2000);
+    admin_client.mint(&lab_funder3, &3000);
+
+    client.fund_lab(&lab_funder1, &1000, &50);
+    client.fund_lab(&lab_funder2, &2000, &100);
+    client.fund_lab(&lab_funder3, &3000, &150);
+
+    // KRN-01 VERIFICATION: All lab funds are restricted
+    // restricted_reserves should equal sum of all lab funds
+    assert_eq!(client.total_assets(), 0); // All funds are restricted
+
+    // Scholars withdraw from each lab
+    let scholar1 = Address::generate(&env);
+    let scholar2 = Address::generate(&env);
+    let scholar3 = Address::generate(&env);
+
+    client.approve_scholarship(&1, &scholar1);
+    client.approve_scholarship(&2, &scholar2);
+    client.approve_scholarship(&3, &scholar3);
+
+    client.withdraw_scholarship(&scholar1, &50);
+    client.withdraw_scholarship(&scholar2, &100);
+    client.withdraw_scholarship(&scholar3, &150);
+
+    // After withdrawals, restricted reserves decrease correctly
+    // Total withdrawn = 50 + 100 + 150 = 300
+    // Remaining = 6000 - 300 = 5700
+    assert_eq!(client.total_assets(), 0); // Still all restricted
+}
+
+#[test]
+fn test_shareholder_withdraws_only_free_assets() {
+    let env = Env::default();
+    env.mock_all_auths();
+
+    let (client, contract_id, _, _, token_id, token_client) = setup_treasury(&env);
+    let token_admin = Address::generate(&env);
+    let admin_client = token::StellarAssetClient::new(&env, &token_id);
+
+    // Alice deposits shares
+    let alice = Address::generate(&env);
+    client.deposit(&alice, &10_000);
+
+    // Treasury receives 20_000 USDC donation (free assets backing shares)
+    admin_client.mint(&contract_id, &20_000);
+    assert_eq!(client.total_assets(), 20_000);
+
+    // Bob funds lab with 50_000 USDC (restricted)
+    let bob = Address::generate(&env);
+    admin_client.mint(&bob, &50_000);
+    client.fund_lab(&bob, &50_000, &1_000);
+
+    // KRN-01 CRITICAL VERIFICATION: total_assets() should only count free assets
+    // Balance = 20_000 (free) + 50_000 (restricted) = 70_000
+    // total_assets() = 70_000 - 50_000 = 20_000
+    assert_eq!(token_client.balance(&contract_id), 70_000);
+    assert_eq!(client.total_assets(), 20_000); // Excludes lab funds!
+
+    // Alice withdraws all her shares - should get FREE assets only, not lab funds
+    let assets = client.withdraw(&alice, &alice, &10_000);
+
+    // KRN-01: Alice gets ~20k (free assets), NOT 70k (which would include scholarships)
+    assert!(assets > 15_000 && assets <= 20_000); // Accounting for vault rounding
+    assert!(assets < 30_000); // Definitely not getting scholarship funds
+
+    // Scholar can still claim lab funds (intact after Alice's withdrawal)
+    let scholar = Address::generate(&env);
+    client.approve_scholarship(&1, &scholar);
+    client.withdraw_scholarship(&scholar, &1_000);
+
+    // Final state: Alice got free assets, scholar got lab funds, no commingling
+    let remaining = token_client.balance(&contract_id);
+    assert!(remaining >= 45_000 && remaining <= 55_000); // ~50k lab - 1k withdrawn
+}

@@ -1,3 +1,3 @@
-export * from './clients';
-export * from './utils';
-export * from './react';
+export * from './clients/index.js';
+export * from './utils/index.js';
+export * from './react/index.js';

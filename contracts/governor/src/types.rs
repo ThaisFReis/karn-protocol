@@ -14,7 +14,7 @@ pub struct GovernanceConfig {
 }
 
 impl GovernanceConfig {
-    pub fn default(env: &Env) -> Self {
+    pub fn default(_env: &Env) -> Self {
         Self {
             voting_delay: 86400, // 1 day
             voting_period: 604800, // 7 days

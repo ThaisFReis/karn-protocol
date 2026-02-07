@@ -3,6 +3,7 @@
 use soroban_sdk::{contracttype, Address, Env};
 
 use crate::proposal::Proposal;
+use crate::types::GovernanceConfig;
 
 /// Storage keys for the Governor contract
 #[contracttype]

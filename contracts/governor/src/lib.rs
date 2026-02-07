@@ -10,7 +10,7 @@ mod storage;
 mod types;
 mod voting;
 
-use soroban_sdk::{contract, contractimpl, contracterror, Address, Env, String, Symbol, Vec, IntoVal};
+use soroban_sdk::{contract, contractimpl, contracterror, Address, Env, String, Symbol, Vec, IntoVal, BytesN};
 
 use proposal::{Proposal, ProposalState, Action};
 use storage::{
@@ -339,6 +339,23 @@ impl GovernorContract {
     /// Get valocracy contract address
     pub fn valocracy(env: Env) -> Option<Address> {
         get_valocracy(&env)
+    }
+
+    /// Upgrade the contract to a new WASM hash.
+    /// Only callable by the governor itself (requires governance proposal).
+    pub fn upgrade(env: Env, new_wasm_hash: BytesN<32>) -> Result<(), GovernorError> {
+        // Only the governor contract itself can upgrade
+        env.current_contract_address().require_auth();
+        
+        env.deployer().update_current_contract_wasm(new_wasm_hash.clone());
+        
+        env.events().publish(
+            (Symbol::new(&env, "contract_upgraded"),),
+            new_wasm_hash,
+        );
+        
+        extend_instance_ttl(&env);
+        Ok(())
     }
 
     // ============ Internal Functions ============

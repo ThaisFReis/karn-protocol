@@ -211,9 +211,10 @@ impl GovernorContract {
         }
         acquire_lock(&env);
 
-        // Get real voting power from Valocracy contract via cross-contract call
+        // KRN-02 FIX: Get voting power at proposal START TIME (snapshot)
+        // This prevents flash voting attacks and ensures consistent power throughout voting
         let valocracy_addr = get_valocracy(&env).ok_or(GovernorError::NotInitialized)?;
-        let voting_power = Self::get_voting_power(&env, &valocracy_addr, &voter);
+        let voting_power = Self::get_voting_power_at(&env, &valocracy_addr, &voter, proposal.start_time);
 
         if voting_power == 0 {
             release_lock(&env);
@@ -369,6 +370,18 @@ impl GovernorContract {
             valocracy_addr,
             &Symbol::new(env, "get_votes"),
             (voter.clone(),).into_val(env),
+        )
+    }
+
+    /// Get voting power at a specific timestamp (for snapshot voting)
+    ///
+    /// KRN-02 FIX: Uses get_votes_at to retrieve historical voting power,
+    /// enabling snapshot-based voting at proposal creation time.
+    fn get_voting_power_at(env: &Env, valocracy_addr: &Address, voter: &Address, timestamp: u64) -> u64 {
+        env.invoke_contract::<u64>(
+            valocracy_addr,
+            &Symbol::new(env, "get_votes_at"),
+            (voter.clone(), timestamp).into_val(env),
         )
     }
 }

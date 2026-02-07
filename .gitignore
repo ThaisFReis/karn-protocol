@@ -1,0 +1,14 @@
+# Rust / Cargo
+target/
+**/*.rs.bk
+Cargo.lock
+
+# Node.js
+node_modules/
+dist/
+build/
+.env
+.DS_Store
+
+# Soroban
+.soroban/

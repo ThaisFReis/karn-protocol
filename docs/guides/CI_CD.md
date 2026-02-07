@@ -192,7 +192,7 @@ codegen-units = 1    # Single codegen unit
 **npm Tags:**
 - `latest`: Stable releases (default install)
 - `beta`: Pre-release versions
-- Users can install with: `npm install @karn/protocol-sdk@beta`
+- Users can install with: `npm install @karn_lat/protocol-sdk@beta`
 
 #### 3. create-release
 
@@ -218,7 +218,7 @@ codegen-units = 1    # Single codegen unit
 
 ## 📦 Included Packages
 - Smart Contracts (Valocracy, Governor, Treasury)
-- SDK: npm install @karn/protocol-sdk@0.1.0-beta.1
+- SDK: npm install @karn_lat/protocol-sdk@0.1.0-beta.1
 
 ## 📋 Contract Checksums
 [SHA256 checksums]
@@ -371,7 +371,7 @@ cache-dependency-path: sdk/package-lock.json
 | Artifact | Size | Contents |
 |----------|------|----------|
 | `contract-bundle` | ~300 KB | contracts-{version}.tar.gz + .sha256 |
-| `sdk-package` | ~500 KB | @karn/protocol-sdk-{version}.tgz |
+| `sdk-package` | ~500 KB | @karn_lat/protocol-sdk-{version}.tgz |
 
 **Usage:**
 - Attached to GitHub releases

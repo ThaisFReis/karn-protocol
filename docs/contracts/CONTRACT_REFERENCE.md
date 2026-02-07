@@ -127,7 +127,7 @@ pub fn initialize(
 
 **Example:**
 ```typescript
-import { ValocracyClient } from '@karn/protocol-sdk';
+import { ValocracyClient } from '@karn_lat/protocol-sdk';
 
 const client = new ValocracyClient({ /* config */ });
 

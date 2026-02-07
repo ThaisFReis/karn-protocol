@@ -164,8 +164,8 @@ jobs:
             - Treasury Contract
 
           - **SDK** (TypeScript)
-            - NPM Package: \`@karn/protocol-sdk@${{ inputs.version }}\`
-            - Installation: \`npm install @karn/protocol-sdk@${{ inputs.version }}\`
+            - NPM Package: \`@karn_lat/protocol-sdk@${{ inputs.version }}\`
+            - Installation: \`npm install @karn_lat/protocol-sdk@${{ inputs.version }}\`
 
           ## 📋 Contract Checksums
 
@@ -176,7 +176,7 @@ jobs:
           ## 🔗 Resources
 
           - [Documentation](https://github.com/karn-protocol/karn-protocol#readme)
-          - [NPM Package](https://www.npmjs.com/package/@karn/protocol-sdk)
+          - [NPM Package](https://www.npmjs.com/package/@karn_lat/protocol-sdk)
           - [Examples](https://github.com/karn-protocol/karn-protocol/tree/main/examples)
 
           ## ⚠️ Security Notice

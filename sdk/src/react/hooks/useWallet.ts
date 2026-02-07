@@ -23,12 +23,7 @@ export const useWallet = () => {
     try {
       const allowed = await requestAccess();
       if (allowed) {
-          // How to get address? usually getPublicKey or getAddress from freighter-api
-          // Wait, @stellar/freighter-api has `getPublicKey`?
-          // I need to check API or rely on standard.
-          // Let's assume requestAccess returns address or we call another method.
-          // Usually `requestAccess` returns public key string if successful?
-          // Docs say `requestAccess()` returns string | null (public key).
+
           const address = allowed; 
           if (address) {
             setState({
@@ -48,13 +43,11 @@ export const useWallet = () => {
     }
   }, []);
 
-  // Check connection on mount?
+  // Check connection on mount
   useEffect(() => {
     isConnected().then(async (connected) => {
       if (connected) {
-          // If already connected, we might need to request access silently or get key?
-          // freighter-api doesn't expose `getPublicKey` without prompt unless already granted?
-          // Usually `requestAccess` is safe to call if connected.
+
       }
     });
   }, []);

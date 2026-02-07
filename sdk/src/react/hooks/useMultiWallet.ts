@@ -2,40 +2,9 @@
  * React hook for multi-wallet support
  *
  * Provides React-friendly interface to WalletManager with automatic state updates
- *
- * @example
- * ```tsx
- * import { useMultiWallet, WalletType } from '@karn/sdk';
- *
- * function MyComponent() {
- *   const {
- *     state,
- *     availableWallets,
- *     connect,
- *     disconnect,
- *     signTransaction,
- *   } = useMultiWallet();
- *
- *   return (
- *     <div>
- *       {!state.isConnected ? (
- *         availableWallets.map(wallet => (
- *           <button key={wallet.type} onClick={() => connect(wallet.type)}>
- *             Connect {wallet.name}
- *           </button>
- *         ))
- *       ) : (
- *         <div>
- *           <p>Connected: {state.address}</p>
- *           <p>Wallet: {state.walletName}</p>
- *           <button onClick={disconnect}>Disconnect</button>
- *         </div>
- *       )}
- *     </div>
- *   );
- * }
- * ```
  */
+
+
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import {
@@ -88,19 +57,18 @@ export interface UseMultiWalletReturn {
  * Hook for multi-wallet support
  */
 export function useMultiWallet(): UseMultiWalletReturn {
-  // Create manager instance (persists across re-renders)
+
   const managerRef = useRef<WalletManager>();
   if (!managerRef.current) {
     managerRef.current = new WalletManager();
   }
   const manager = managerRef.current;
 
-  // State
   const [state, setState] = useState<WalletState>(manager.getState());
   const [availableWallets, setAvailableWallets] = useState<WalletMetadata[]>([]);
   const [allWallets] = useState<WalletMetadata[]>(manager.getAllWallets());
 
-  // Update state when wallet events occur
+
   useEffect(() => {
     const handleConnect = () => setState(manager.getState());
     const handleDisconnect = () => setState(manager.getState());
@@ -120,7 +88,7 @@ export function useMultiWallet(): UseMultiWalletReturn {
     };
   }, [manager]);
 
-  // Load available wallets on mount
+
   useEffect(() => {
     let mounted = true;
 
@@ -138,7 +106,7 @@ export function useMultiWallet(): UseMultiWalletReturn {
     };
   }, [manager]);
 
-  // Connect to wallet
+
   const connect = useCallback(
     async (walletType: WalletType): Promise<WalletConnection> => {
       const connection = await manager.connect(walletType);
@@ -148,13 +116,13 @@ export function useMultiWallet(): UseMultiWalletReturn {
     [manager]
   );
 
-  // Disconnect from wallet
+
   const disconnect = useCallback(async (): Promise<void> => {
     await manager.disconnect();
     setState(manager.getState());
   }, [manager]);
 
-  // Sign transaction
+
   const signTransaction = useCallback(
     async (xdr: string, options?: SignTransactionOptions): Promise<string> => {
       return await manager.signTransaction(xdr, options);
@@ -162,7 +130,7 @@ export function useMultiWallet(): UseMultiWalletReturn {
     [manager]
   );
 
-  // Sign message
+
   const signMessage = useCallback(
     async (message: string): Promise<string> => {
       return await manager.signMessage(message);
@@ -170,17 +138,17 @@ export function useMultiWallet(): UseMultiWalletReturn {
     [manager]
   );
 
-  // Get network
+
   const getNetwork = useCallback(async (): Promise<string> => {
     return await manager.getNetwork();
   }, [manager]);
 
-  // Get address
+
   const getAddress = useCallback(async (): Promise<string | null> => {
     return await manager.getAddress();
   }, [manager]);
 
-  // Check if connected
+
   const isConnected = useCallback(async (): Promise<boolean> => {
     return await manager.isConnected();
   }, [manager]);

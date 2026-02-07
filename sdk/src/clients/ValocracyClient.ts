@@ -1,5 +1,5 @@
 import { Client as GeneratedValocracyClient } from '../generated/valocracy/src/index.js';
-import type { AssembledTransaction } from '@stellar/stellar-sdk/contract';
+import type { AssembledTransaction, Result } from '@stellar/stellar-sdk/contract';
 import type { u64 } from '@stellar/stellar-sdk/contract';
 
 export class ValocracyClient {
@@ -51,7 +51,7 @@ export class ValocracyClient {
     signature: Buffer,
     nonce: bigint,
     expiry: bigint
-  ): Promise<AssembledTransaction<u64>> {
+  ): Promise<AssembledTransaction<Result<u64>>> {
     return await this.client.self_register({
       caller,
       signature,

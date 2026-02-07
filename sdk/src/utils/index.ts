@@ -1,3 +1,3 @@
-export * from './decay';
-export * from './simulation';
-export * from './polling';
+export * from './decay.js';
+export * from './simulation.js';
+export * from './polling.js';

@@ -25,27 +25,9 @@ export interface UseGovernorResult {
  *
  * @param proposalId - The proposal ID to query (optional)
  * @returns Object containing proposal data, loading state, and refetch function
- *
- * @example
- * ```tsx
- * function ProposalDetails({ proposalId }) {
- *   const { proposal, isLoading, error } = useGovernor(proposalId);
- *
- *   if (isLoading) return <div>Loading proposal...</div>;
- *   if (error) return <div>Error: {error.message}</div>;
- *   if (!proposal) return <div>No proposal found</div>;
- *
- *   return (
- *     <div>
- *       <h2>Proposal #{proposal.id.toString()}</h2>
- *       <p>{proposal.description}</p>
- *       <p>Votes For: {proposal.votesFor.toString()}</p>
- *       <p>Votes Against: {proposal.votesAgainst.toString()}</p>
- *     </div>
- *   );
- * }
- * ```
  */
+ *
+
 export function useGovernor(proposalId?: bigint): UseGovernorResult {
   const { governor } = useKarn();
   const [proposal, setProposal] = useState<Proposal | null>(null);
@@ -76,7 +58,7 @@ export function useGovernor(proposalId?: bigint): UseGovernorResult {
 
   useEffect(() => {
     fetchData();
-  }, [proposalId?.toString()]); // Re-fetch when proposalId changes
+  }, [proposalId?.toString()]);
 
   return {
     proposal,

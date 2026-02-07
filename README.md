@@ -41,7 +41,7 @@ See [CONTRIBUTING.md](.github/CONTRIBUTING.md)
 
 ## Security
 
-See [SECURITY.md](SECURITY.md) for vulnerability reporting.
+See [SECURITY.md](.github/SECURITY.md) for vulnerability reporting.
 
 ## License
 

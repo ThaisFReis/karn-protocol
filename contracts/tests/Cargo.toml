@@ -1,13 +1,22 @@
 [package]
-name = "tests"
+name = "karn-integration-tests"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "integration_tests"
+path = "integration_tests.rs"
+crate-type = ["lib"]
+
 [dependencies]
-soroban-sdk = { workspace = true }
+soroban-sdk = { workspace = true, features = ["testutils"] }
 
 [dev-dependencies]
 soroban-sdk = { workspace = true, features = ["testutils"] }
 valocracy = { path = "../valocracy" }
 governor = { path = "../governor" }
 treasury = { path = "../treasury" }
+
+[features]
+default = []
+testutils = ["soroban-sdk/testutils"]

@@ -1,7 +1,18 @@
-//! Treasury - Asset Vault for Valocracy
+//! Treasury - Governance-Controlled Asset Management for Valocracy
 //!
-//! Manages treasury funds and distributes shares to contributors based on their rarity.
-//! No admin: all spends go through governance. Similar to ERC4626 vault pattern.
+//! 🏛️ VALOCRACY MODEL: Treasury is managed collectively, not individually.
+//!
+//! ## Principles
+//! - **All withdrawals require governance approval** - No permissionless redemptions
+//! - **Collective decision-making** - Community votes on every fund movement
+//! - **Contribution-based power** - Voting weighted by Mana (earned through participation)
+//! - **No admin keys** - Even core team needs community approval to withdraw
+//!
+//! ## Architecture
+//! - Shares track contribution-based allocation (informational/potential)
+//! - Only the Governor contract can move funds via `transfer()`
+//! - Valocracy contract allocates shares when minting badges
+//! - Restricted reserves isolate scholarship funds from general treasury
 
 #![no_std]
 
@@ -81,15 +92,22 @@ impl TreasuryContract {
         Ok(())
     }
 
-    // ============ Deposit (Called by Valocracy) ============
+    // ============ Share Accounting (Called by Valocracy) ============
 
-    /// Deposit shares to a user account
+    /// Allocate shares to a user account — called by Valocracy contract
     ///
-    /// This is called by the Valocracy contract when minting NFTs.
-    /// Shares represent the user's claim on treasury assets.
+    /// 📊 SHARE ACCOUNTING: Shares track contribution-based allocation of treasury value.
     ///
-    /// Note: Unlike standard ERC4626 vaults, shares are allocated directly by
-    /// the Valocracy contract based on badge rarity, not converted from deposited assets.
+    /// In Valocracy:
+    /// - Shares represent potential economic interest proportional to contribution
+    /// - Shares are allocated when badges are minted (based on rarity)
+    /// - **Shares CANNOT be individually redeemed** (no permissionless withdraw)
+    /// - Shares may be used for:
+    ///   * Informational: Track member's proportional contribution
+    ///   * Governance weight: Additional voting power (if implemented)
+    ///   * Future distributions: Basis for governance-approved airdrops
+    ///
+    /// All actual fund movements require governance approval via `transfer()`.
     pub fn deposit(env: Env, receiver: Address, shares: i128) -> Result<(), TreasuryError> {
         let valocracy = get_valocracy(&env).ok_or(TreasuryError::NotInitialized)?;
         valocracy.require_auth();
@@ -125,68 +143,29 @@ impl TreasuryContract {
         Ok(())
     }
 
-    // ============ Withdraw ============
+    // ============ Withdraw (DEPRECATED - Use Governance) ============
 
-    /// Withdraw assets by burning shares
+    /// ⚠️ DEPRECATED: Individual withdrawals are not allowed in Valocracy.
     ///
-    /// Converts shares to underlying assets based on current ratio.
+    /// In Valocracy, all Treasury withdrawals must be approved through governance.
+    /// Members cannot unilaterally redeem shares for assets.
+    ///
+    /// To withdraw funds:
+    /// 1. Create a governance proposal requesting funds
+    /// 2. Community votes on the proposal (weighted by Mana)
+    /// 3. If approved, Governor executes and calls `spend()` to transfer funds
+    ///
+    /// This function is kept for backward compatibility but always returns NotAuthorized.
+    /// Use the governance process via `spend()` instead.
     pub fn withdraw(
-        env: Env,
-        caller: Address,
-        receiver: Address,
-        shares: i128,
+        _env: Env,
+        _caller: Address,
+        _receiver: Address,
+        _shares: i128,
     ) -> Result<i128, TreasuryError> {
-        caller.require_auth();
-
-        if shares <= 0 {
-            return Err(TreasuryError::ZeroAmount);
-        }
-
-        // Check lock
-        if is_locked(&env) {
-            return Err(TreasuryError::ReentrancyDetected);
-        }
-        acquire_lock(&env);
-
-        let user_shares = get_user_shares(&env, &caller);
-        if user_shares < shares {
-            release_lock(&env);
-            return Err(TreasuryError::InsufficientShares);
-        }
-
-        // Calculate assets to withdraw
-        let assets = Self::preview_withdraw(env.clone(), shares)?;
-
-        if assets <= 0 {
-            release_lock(&env);
-            return Err(TreasuryError::InsufficientAssets);
-        }
-
-        // Update user shares
-        let new_user_shares = user_shares.checked_sub(shares)
-            .ok_or(TreasuryError::MathOverflow)?;
-        set_user_shares(&env, &caller, new_user_shares);
-
-        // Update total shares
-        let total = get_total_shares(&env);
-        let new_total = total.checked_sub(shares)
-            .ok_or(TreasuryError::MathOverflow)?;
-        set_total_shares(&env, new_total);
-
-        // Transfer assets to receiver
-        let asset_token = get_asset_token(&env).ok_or(TreasuryError::NotInitialized)?;
-        let client = token::TokenClient::new(&env, &asset_token);
-        client.transfer(&env.current_contract_address(), &receiver, &assets);
-
-        extend_instance_ttl(&env);
-
-        env.events().publish(
-            (Symbol::new(&env, "withdraw"), caller, receiver),
-            (assets, shares),
-        );
-
-        release_lock(&env);
-        Ok(assets)
+        // VALOCRACY PRINCIPLE: Treasury is managed collectively, not individually
+        // All withdrawals require governance approval
+        Err(TreasuryError::NotAuthorized)
     }
 
     // ============ View Functions ============
@@ -246,16 +225,28 @@ impl TreasuryContract {
         get_governor(&env)
     }
 
-    // ============ Spend (Called by Governor) ============
+    // ============ Governance-Controlled Transfers (VALOCRACY) ============
 
-    /// Spend treasury assets — only callable by the Governor contract
+    /// Transfer treasury assets — ONLY callable by the Governor contract
     ///
-    /// This is invoked as part of executing an approved governance proposal.
-    pub fn spend(
+    /// 🏛️ VALOCRACY PRINCIPLE: All treasury movements require governance approval.
+    ///
+    /// This is the ONLY way to move funds from the Treasury. It is invoked as part
+    /// of executing an approved governance proposal:
+    ///
+    /// 1. Member creates proposal: "Send X tokens to address Y"
+    /// 2. Community votes (weighted by Mana = contribution-based power)
+    /// 3. If approved: Governor calls this function to execute the transfer
+    /// 4. If rejected: No transfer happens
+    ///
+    /// This enforces collective decision-making instead of individual redemptions.
+    /// Even core team members cannot withdraw without community approval.
+    pub fn transfer(
         env: Env,
         receiver: Address,
         amount: i128,
     ) -> Result<(), TreasuryError> {
+        // CRITICAL: Only Governor can call this
         let governor = get_governor(&env).ok_or(TreasuryError::NotInitialized)?;
         governor.require_auth();
 
@@ -283,12 +274,23 @@ impl TreasuryContract {
         extend_instance_ttl(&env);
 
         env.events().publish(
-            (Symbol::new(&env, "spend"), receiver),
+            (Symbol::new(&env, "transfer"), receiver),
             amount,
         );
 
         release_lock(&env);
         Ok(())
+    }
+
+    /// Legacy alias for transfer() — kept for backward compatibility
+    ///
+    /// Use `transfer()` instead. This function will be removed in future versions.
+    pub fn spend(
+        env: Env,
+        receiver: Address,
+        amount: i128,
+    ) -> Result<(), TreasuryError> {
+        Self::transfer(env, receiver, amount)
     }
 
     // ============ Scholarship Escrow ============
@@ -466,3 +468,6 @@ mod test;
 
 #[cfg(test)]
 mod test_comprehensive;
+
+#[cfg(test)]
+mod test_valocracy;

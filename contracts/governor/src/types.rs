@@ -9,8 +9,12 @@ pub struct GovernanceConfig {
     pub voting_period: u64,
     /// Minimum Mana required to create a proposal
     pub proposal_threshold: u64,
-    /// Percentage of votes required for a proposal to pass (e.g. 51)
+    /// Percentage of FOR votes required vs total votes cast (e.g. 51 = 51%)
+    /// This is the APPROVAL threshold, not participation
     pub quorum_percentage: u64,
+    /// Minimum percentage of total Mana that must vote (e.g. 4 = 4%)
+    /// KRN-03: Prevents single-vote proposal hijacking
+    pub participation_threshold: u64,
 }
 
 impl GovernanceConfig {
@@ -19,7 +23,8 @@ impl GovernanceConfig {
             voting_delay: 86400, // 1 day
             voting_period: 604800, // 7 days
             proposal_threshold: 100, // 100 Mana
-            quorum_percentage: 51, // 51%
+            quorum_percentage: 51, // 51% approval required
+            participation_threshold: 4, // 4% participation required (KRN-03)
         }
     }
 }

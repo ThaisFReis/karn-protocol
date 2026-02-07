@@ -18,6 +18,32 @@ pub enum DataKey {
     UserShares(Address),
     /// Reentrancy lock
     ReentrancyLock,
+    /// Lab counter (for ID generation)
+    LabCounter,
+    /// Lab ID -> Lab
+    Lab(u32),
+    /// User address -> Claimable balance (Scholarship funds)
+    ClaimableBalance(Address),
+}
+
+/// Status of a Lab
+#[contracttype]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub enum LabStatus {
+    Active,
+    Cancelled,
+    Completed,
+}
+
+/// Lab Funding Struct
+#[contracttype]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Lab {
+    pub id: u32,
+    pub funder: Address,
+    pub total_amount: i128,
+    pub scholarship_per_member: i128,
+    pub status: LabStatus,
 }
 
 // TTL constants
@@ -112,4 +138,36 @@ pub fn acquire_lock(env: &Env) {
 
 pub fn release_lock(env: &Env) {
     env.storage().instance().remove(&DataKey::ReentrancyLock);
+}
+
+// ============ Lab Escrow ============
+
+pub fn get_lab_counter(env: &Env) -> u32 {
+    env.storage().instance().get(&DataKey::LabCounter).unwrap_or(0)
+}
+
+pub fn set_lab_counter(env: &Env, count: u32) {
+    env.storage().instance().set(&DataKey::LabCounter, &count);
+}
+
+pub fn get_lab(env: &Env, lab_id: u32) -> Option<Lab> {
+    let key = DataKey::Lab(lab_id);
+    env.storage().persistent().get(&key)
+}
+
+pub fn set_lab(env: &Env, lab: &Lab) {
+    let key = DataKey::Lab(lab.id);
+    env.storage().persistent().set(&key, lab);
+    extend_persistent_ttl(env, &key);
+}
+
+pub fn get_claimable(env: &Env, account: &Address) -> i128 {
+    let key = DataKey::ClaimableBalance(account.clone());
+    env.storage().persistent().get(&key).unwrap_or(0)
+}
+
+pub fn set_claimable(env: &Env, account: &Address, amount: i128) {
+    let key = DataKey::ClaimableBalance(account.clone());
+    env.storage().persistent().set(&key, &amount);
+    extend_persistent_ttl(env, &key);
 }

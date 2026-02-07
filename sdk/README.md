@@ -7,7 +7,7 @@
 
 > **The official TypeScript SDK for Karn Protocol**
 >
-> Merit-based governance on Stellar/Soroban - where power = contribution, not capital
+> Contribution-driven governance on Stellar/Soroban - where power = contribution, not capital
 
 ## Installation
 

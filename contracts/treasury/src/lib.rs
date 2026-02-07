@@ -14,6 +14,7 @@ use storage::{
     get_valocracy, get_governor, get_asset_token, get_total_shares, get_user_shares,
     set_valocracy, set_governor, set_asset_token, set_total_shares, set_user_shares,
     extend_instance_ttl,
+    is_locked, acquire_lock, release_lock,
 };
 
 #[contracterror]
@@ -120,8 +121,15 @@ impl TreasuryContract {
             return Err(TreasuryError::ZeroAmount);
         }
 
+        // Check lock
+        if is_locked(&env) {
+            return Err(TreasuryError::ReentrancyDetected);
+        }
+        acquire_lock(&env);
+
         let user_shares = get_user_shares(&env, &caller);
         if user_shares < shares {
+            release_lock(&env);
             return Err(TreasuryError::InsufficientShares);
         }
 
@@ -129,6 +137,7 @@ impl TreasuryContract {
         let assets = Self::preview_withdraw(env.clone(), shares)?;
 
         if assets <= 0 {
+            release_lock(&env);
             return Err(TreasuryError::InsufficientAssets);
         }
 
@@ -151,6 +160,7 @@ impl TreasuryContract {
             (assets, shares),
         );
 
+        release_lock(&env);
         Ok(assets)
     }
 
@@ -222,11 +232,18 @@ impl TreasuryContract {
             return Err(TreasuryError::ZeroAmount);
         }
 
+        // Check lock
+        if is_locked(&env) {
+            return Err(TreasuryError::ReentrancyDetected);
+        }
+        acquire_lock(&env);
+
         let asset_token = get_asset_token(&env).ok_or(TreasuryError::NotInitialized)?;
         let client = token::TokenClient::new(&env, &asset_token);
 
         let balance = client.balance(&env.current_contract_address());
         if balance < amount {
+            release_lock(&env);
             return Err(TreasuryError::InsufficientAssets);
         }
 
@@ -239,6 +256,7 @@ impl TreasuryContract {
             amount,
         );
 
+        release_lock(&env);
         Ok(())
     }
 }

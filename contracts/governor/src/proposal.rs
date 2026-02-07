@@ -41,6 +41,9 @@ pub struct Proposal {
     pub proposer: Address,
     /// Description of the proposal
     pub description: String,
+    /// Timestamp when proposal was created (used for voting power snapshot)
+    /// KRN-03 FIX: Snapshot voting power at creation time, not voting start time
+    pub creation_time: u64,
     /// Timestamp when voting starts
     pub start_time: u64,
     /// Timestamp when voting ends

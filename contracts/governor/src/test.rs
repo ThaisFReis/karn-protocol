@@ -130,7 +130,8 @@ fn test_voting_power_snapshot() {
 
     // Get proposal to find snapshot time
     let proposal = governor_client.get_proposal(&proposal_id).unwrap();
-    let snapshot_mana = valocracy_client.get_votes_at(&voter, &proposal.start_time);
+    // KRN-03 FIX: Snapshot is now at creation_time, not start_time
+    let snapshot_mana = valocracy_client.get_votes_at(&voter, &proposal.creation_time);
 
     // Fast forward past voting delay to start voting
     // Voting delay is 1 day (86400), voting period is 7 days (604800)
@@ -141,7 +142,7 @@ fn test_voting_power_snapshot() {
     // Vote after time has passed
     let voting_power_used = governor_client.cast_vote(&voter, &proposal_id, &true);
 
-    // KRN-02 VERIFICATION: Voting power should equal Mana at proposal.start_time (snapshot)
+    // KRN-03 FIX: Voting power should equal Mana at proposal.creation_time (snapshot)
     assert_eq!(voting_power_used, snapshot_mana);
 
     // Verify proposal tallied the snapshot power
@@ -201,9 +202,10 @@ fn test_flash_voting_prevented() {
         &actions,
     );
 
-    // Get snapshot Mana from proposal start time
+    // Get snapshot Mana from proposal creation time
     let proposal = governor_client.get_proposal(&proposal_id).unwrap();
-    let snapshot_mana = valocracy_client.get_votes_at(&genesis_alice, &proposal.start_time);
+    // KRN-03 FIX: Snapshot is now at creation_time, not start_time
+    let snapshot_mana = valocracy_client.get_votes_at(&genesis_alice, &proposal.creation_time);
 
     // Fast forward to voting period
     env.ledger().with_mut(|li| {
@@ -213,9 +215,8 @@ fn test_flash_voting_prevented() {
     // Genesis member votes
     let voting_power_used = governor_client.cast_vote(&genesis_alice, &proposal_id, &true);
 
-    // KRN-02 VERIFICATION: Uses snapshot from proposal creation time
-    // This prevents flash voting - even if power changes mid-proposal,
-    // the snapshot at creation time is what counts
+    // KRN-03 FIX: Uses snapshot from proposal creation time
+    // This prevents flash voting AND "buy-in" during voting delay
     assert_eq!(voting_power_used, snapshot_mana);
 
     let proposal_after = governor_client.get_proposal(&proposal_id).unwrap();
@@ -273,9 +274,10 @@ fn test_consistent_voting_power_across_voters() {
         &actions,
     );
 
-    // Get snapshot Mana from proposal start time
+    // Get snapshot Mana from proposal creation time
     let proposal = governor_client.get_proposal(&proposal_id).unwrap();
-    let snapshot_mana = valocracy_client.get_votes_at(&genesis_alice, &proposal.start_time);
+    // KRN-03 FIX: Snapshot is now at creation_time, not start_time
+    let snapshot_mana = valocracy_client.get_votes_at(&genesis_alice, &proposal.creation_time);
 
     // Vote immediately (early vote) - past voting delay
     env.ledger().with_mut(|li| {
@@ -284,8 +286,8 @@ fn test_consistent_voting_power_across_voters() {
 
     let early_power = governor_client.cast_vote(&genesis_alice, &proposal_id, &true);
 
-    // KRN-02 VERIFICATION: Voting power equals snapshot at proposal creation time
-    // The timestamp used for Mana calculation is proposal.start_time, not current time
+    // KRN-03 FIX: Voting power equals snapshot at proposal creation time
+    // The timestamp used for Mana calculation is proposal.creation_time, not current time
     assert_eq!(early_power, snapshot_mana);
 }
 

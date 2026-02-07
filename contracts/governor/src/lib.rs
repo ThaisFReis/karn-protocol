@@ -13,6 +13,9 @@ mod voting;
 #[cfg(test)]
 mod test;
 
+#[cfg(test)]
+mod test_krn03;
+
 use soroban_sdk::{contract, contractimpl, contracterror, Address, Env, String, Symbol, Vec, IntoVal, BytesN};
 
 use proposal::{Proposal, ProposalState, Action};
@@ -163,6 +166,7 @@ impl GovernorContract {
             id: proposal_id,
             proposer: proposer.clone(),
             description,
+            creation_time: current_time,  // KRN-03 FIX: Snapshot at creation
             start_time: current_time + config.voting_delay,
             end_time: current_time + config.voting_delay + config.voting_period,
             for_votes: 0,
@@ -219,10 +223,10 @@ impl GovernorContract {
         }
         acquire_lock(&env);
 
-        // KRN-02 FIX: Get voting power at proposal START TIME (snapshot)
-        // This prevents flash voting attacks and ensures consistent power throughout voting
+        // KRN-03 FIX: Get voting power at proposal CREATION time (snapshot)
+        // This prevents "buy-in" during voting delay and ensures fair snapshot timing
         let valocracy_addr = get_valocracy(&env).ok_or(GovernorError::NotInitialized)?;
-        let voting_power = Self::get_voting_power_at(&env, &valocracy_addr, &voter, proposal.start_time);
+        let voting_power = Self::get_voting_power_at(&env, &valocracy_addr, &voter, proposal.creation_time);
 
         if voting_power == 0 {
             release_lock(&env);
@@ -399,3 +403,4 @@ impl GovernorContract {
         )
     }
 }
+

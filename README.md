@@ -3,10 +3,25 @@
 > **Contribution-based governance on Stellar/Soroban**
 > Where power = contribution, not capital
 
+[![npm version](https://img.shields.io/npm/v/@karn_lat/protocol-sdk.svg?style=flat&color=purple)](https://www.npmjs.com/package/@karn_lat/protocol-sdk)
+[![npm downloads](https://img.shields.io/npm/dm/@karn_lat/protocol-sdk.svg?style=flat&color=purple)](https://www.npmjs.com/package/@karn_lat/protocol-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Security: Hardened](https://img.shields.io/badge/Security-Hardened-green.svg)](docs/SECURITY_HARDENING.md)
 [![Tests: 53 Passing](https://img.shields.io/badge/Tests-53%20passing-brightgreen.svg)](docs/reports/TESTING_SUMMARY.md)
 [![Stellar: Soroban](https://img.shields.io/badge/Stellar-Soroban-blue.svg)](https://soroban.stellar.org)
+
+---
+
+## Installation
+
+```bash
+npm install @karn_lat/protocol-sdk
+```
+
+Or with yarn:
+```bash
+yarn add @karn_lat/protocol-sdk
+```
 
 ---
 

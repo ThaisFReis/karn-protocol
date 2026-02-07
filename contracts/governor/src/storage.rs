@@ -18,6 +18,8 @@ pub enum DataKey {
     Vote(u64, Address),
     /// Reentrancy lock
     ReentrancyLock,
+    /// Governance configuration
+    Config,
 }
 
 // TTL constants
@@ -110,4 +112,13 @@ pub fn acquire_lock(env: &Env) {
 
 pub fn release_lock(env: &Env) {
     env.storage().instance().remove(&DataKey::ReentrancyLock);
+}
+// ============ Configuration ============
+
+pub fn get_config(env: &Env) -> Option<GovernanceConfig> {
+    env.storage().instance().get(&DataKey::Config)
+}
+
+pub fn set_config(env: &Env, config: &GovernanceConfig) {
+    env.storage().instance().set(&DataKey::Config, config);
 }

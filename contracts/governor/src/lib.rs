@@ -7,6 +7,7 @@
 
 mod proposal;
 mod storage;
+mod types;
 mod voting;
 
 use soroban_sdk::{contract, contractimpl, contracterror, Address, Env, String, Symbol, Vec, IntoVal};
@@ -17,16 +18,11 @@ use storage::{
     set_valocracy, set_proposal, set_proposal_count, set_vote,
     has_voted, extend_instance_ttl,
     is_locked, acquire_lock, release_lock,
+    get_config, set_config,
 };
+use types::GovernanceConfig;
 
-/// Voting delay: 1 second (short for live demos)
-pub const VOTING_DELAY: u64 = 1;
 
-/// Voting period: 30 seconds (short for live demos)
-pub const VOTING_PERIOD: u64 = 300;
-
-/// Quorum: 51% of votes required
-pub const QUORUM_PERCENTAGE: u64 = 51;
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -68,8 +64,34 @@ impl GovernorContract {
 
         set_valocracy(&env, &valocracy);
         set_proposal_count(&env, 0);
+        
+        // Initialize with default configuration
+        let config = GovernanceConfig::default(&env);
+        set_config(&env, &config);
 
         extend_instance_ttl(&env);
+        Ok(())
+    }
+
+    // ============ Configuration ============
+
+    /// Update governance configuration.
+    /// Only callable by the Governor (self-governance).
+    pub fn update_config(
+        env: Env,
+        config: GovernanceConfig,
+    ) -> Result<(), GovernorError> {
+        let valocracy = get_valocracy(&env).ok_or(GovernorError::NotInitialized)?;
+        
+        // This function must be called by the Governor contract itself (via proposal execution)
+        env.current_contract_address().require_auth();
+
+        set_config(&env, &config);
+        
+        env.events().publish(
+            (Symbol::new(&env, "config_update"),),
+            (),
+        );
         Ok(())
     }
 
@@ -112,6 +134,17 @@ impl GovernorContract {
             return Err(GovernorError::NotAMember);
         }
 
+        let config = get_config(&env).ok_or(GovernorError::NotInitialized)?;
+        
+        // Check proposal threshold (if implemented in Valocracy, or just check generic level/mana logic?)
+        // The plan said "Minimum Mana required".
+        // We get voting power for the proposer.
+        let voting_power = Self::get_voting_power(&env, &valocracy, &proposer);
+        if voting_power < config.proposal_threshold {
+             release_lock(&env);
+             return Err(GovernorError::NoVotingPower); // Or a specific error like InsufficientProposalThreshold
+        }
+
         let current_time = env.ledger().timestamp();
         let proposal_count = get_proposal_count(&env);
         let proposal_id = proposal_count + 1;
@@ -120,8 +153,8 @@ impl GovernorContract {
             id: proposal_id,
             proposer: proposer.clone(),
             description,
-            start_time: current_time + VOTING_DELAY,
-            end_time: current_time + VOTING_DELAY + VOTING_PERIOD,
+            start_time: current_time + config.voting_delay,
+            end_time: current_time + config.voting_delay + config.voting_period,
             for_votes: 0,
             against_votes: 0,
             executed: false,
@@ -278,7 +311,15 @@ impl GovernorContract {
         }
 
         let for_percentage = (proposal.for_votes * 100) / total_votes;
-        if for_percentage >= QUORUM_PERCENTAGE {
+        
+        // Get config for quorum
+        // Note: Ideally we should store the snapshot of config *at proposal creation* 
+        // to avoid shifting goalposts. But for now, using current config is acceptable for MVP protocol.
+        // Or better: the proposal snapshot logic is complex.
+        // Let's use current config.
+        let config = get_config(&env).ok_or(GovernorError::NotInitialized)?;
+
+        if for_percentage >= config.quorum_percentage {
             Ok(ProposalState::Succeeded)
         } else {
             Ok(ProposalState::Defeated)

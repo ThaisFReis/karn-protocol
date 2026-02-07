@@ -8,27 +8,25 @@ use crate::types::{UserStats, Valor};
 #[contracttype]
 #[derive(Clone)]
 pub enum DataKey {
-    /// Whether the contract has been initialized
+    /// Contract initialized status
     Initialized,
-    /// Governor contract address
+    /// Governor address
     Governor,
-    /// Treasury contract address
+    /// Treasury address
     Treasury,
-    /// Total supply of tokens
+    /// Total supply
     TotalSupply,
-    /// The valor_id used by self_register() for the Member badge
+    /// Member badge Valor ID
     MemberValorId,
-    /// Token ID -> Valor ID mapping
+    /// Token ID to Valor ID mapping
     TokenValorId(u64),
-    /// Valor ID -> Valor data mapping
+    /// Valor ID to Valor data mapping
     ValorData(u64),
-    /// Account -> UserStats mapping
+    /// Account to UserStats mapping
     UserStats(Address),
-    /// Token ID -> Owner address mapping
+    /// Token ID to owner address mapping
     TokenOwner(u64),
-    /// Backend public key for signature verification
     Signer,
-    /// Used nonces for replay protection: (Address, u64) -> bool
     UsedNonce(Address, u64),
 }
 
@@ -54,7 +52,7 @@ fn extend_persistent_ttl(env: &Env, key: &DataKey) {
         .extend_ttl(key, PERSISTENT_LIFETIME_THRESHOLD, PERSISTENT_BUMP_AMOUNT);
 }
 
-// ============ Initialized Storage ============
+
 
 pub fn is_initialized(env: &Env) -> bool {
     env.storage().instance().get(&DataKey::Initialized).unwrap_or(false)
@@ -64,7 +62,7 @@ pub fn set_initialized(env: &Env) {
     env.storage().instance().set(&DataKey::Initialized, &true);
 }
 
-// ============ MemberValorId Storage ============
+
 
 pub fn get_member_valor_id(env: &Env) -> Option<u64> {
     env.storage().instance().get(&DataKey::MemberValorId)
@@ -74,7 +72,7 @@ pub fn set_member_valor_id(env: &Env, valor_id: u64) {
     env.storage().instance().set(&DataKey::MemberValorId, &valor_id);
 }
 
-// ============ Governor Storage ============
+
 
 pub fn get_governor(env: &Env) -> Option<Address> {
     env.storage().instance().get(&DataKey::Governor)
@@ -84,7 +82,7 @@ pub fn set_governor(env: &Env, governor: &Address) {
     env.storage().instance().set(&DataKey::Governor, governor);
 }
 
-// ============ Treasury Storage ============
+
 
 pub fn get_treasury(env: &Env) -> Option<Address> {
     env.storage().instance().get(&DataKey::Treasury)
@@ -94,7 +92,7 @@ pub fn set_treasury(env: &Env, treasury: &Address) {
     env.storage().instance().set(&DataKey::Treasury, treasury);
 }
 
-// ============ Total Supply Storage ============
+
 
 pub fn get_total_supply(env: &Env) -> u64 {
     env.storage()
@@ -107,7 +105,7 @@ pub fn set_total_supply(env: &Env, supply: u64) {
     env.storage().instance().set(&DataKey::TotalSupply, &supply);
 }
 
-// ============ Token -> Valor ID Storage ============
+
 
 pub fn get_token_valor_id(env: &Env, token_id: u64) -> Option<u64> {
     let key = DataKey::TokenValorId(token_id);
@@ -124,7 +122,7 @@ pub fn set_token_valor_id(env: &Env, token_id: u64, valor_id: u64) {
     extend_persistent_ttl(env, &key);
 }
 
-// ============ Valor Data Storage ============
+
 
 pub fn get_valor(env: &Env, valor_id: u64) -> Option<Valor> {
     let key = DataKey::ValorData(valor_id);
@@ -141,7 +139,7 @@ pub fn set_valor(env: &Env, valor_id: u64, valor: &Valor) {
     extend_persistent_ttl(env, &key);
 }
 
-// ============ User Stats Storage ============
+
 
 pub fn get_user_stats(env: &Env, account: &Address) -> Option<UserStats> {
     let key = DataKey::UserStats(account.clone());
@@ -163,7 +161,7 @@ pub fn has_user_stats(env: &Env, account: &Address) -> bool {
     env.storage().persistent().has(&key)
 }
 
-// ============ Token Owner Storage ============
+
 
 pub fn get_token_owner(env: &Env, token_id: u64) -> Option<Address> {
     let key = DataKey::TokenOwner(token_id);
@@ -190,7 +188,7 @@ pub fn remove_token_valor_id(env: &Env, token_id: u64) {
     env.storage().persistent().remove(&key);
 }
 
-// ============ Signer Storage ============
+
 
 pub fn get_signer(env: &Env) -> Option<BytesN<32>> {
     env.storage().instance().get(&DataKey::Signer)
@@ -200,7 +198,7 @@ pub fn set_signer(env: &Env, signer: &BytesN<32>) {
     env.storage().instance().set(&DataKey::Signer, signer);
 }
 
-// ============ Nonce Storage ============
+
 
 pub fn is_nonce_used(env: &Env, account: &Address, nonce: u64) -> bool {
     let key = DataKey::UsedNonce(account.clone(), nonce);

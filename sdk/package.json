@@ -1,9 +1,16 @@
 {
   "name": "@karn/protocol-sdk",
   "version": "0.1.0-alpha.1",
-  "description": "Official TypeScript SDK for Karn Protocol - Merit-based governance on Stelalar",
+  "description": "Official TypeScript SDK for Karn Protocol - Merit-based governance on Stellar",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "tsc",
     "test": "jest",

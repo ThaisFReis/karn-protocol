@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useMemo, ReactNode } from 'react';
-import { ValocracyClient, GovernorClient, TreasuryClient } from '../../clients';
+import { ValocracyClient, GovernorClient, TreasuryClient } from '../../clients/index.js';
 
 export interface KarnConfig {
   networkPassphrase: string;

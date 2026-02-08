@@ -15,6 +15,21 @@
 npm install @karn_lat/protocol-sdk @stellar/stellar-sdk
 ```
 
+## Import Patterns
+
+The SDK supports both root and subpath imports for tree-shaking:
+
+```typescript
+// Root import (all modules)
+import { ValocracyClient, GovernorClient, TreasuryClient } from '@karn_lat/protocol-sdk';
+
+// Subpath imports (tree-shakeable)
+import { ValocracyClient } from '@karn_lat/protocol-sdk/clients';
+import { useKarn, KarnProvider } from '@karn_lat/protocol-sdk/react';
+import { WalletManager } from '@karn_lat/protocol-sdk/wallet';
+import { calculateMana } from '@karn_lat/protocol-sdk/utils';
+```
+
 ## Quick Start
 
 ```typescript

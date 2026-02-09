@@ -283,8 +283,7 @@ Volunteers and contributors gain voice through verified impact, not donations.
 **Documentation:** [docs/SECURITY_HARDENING.md](docs/SECURITY_HARDENING.md)
 
 ### Report Vulnerabilities
-- **Email:** security@karn.protocol
-- **GitHub:** [Create Security Advisory](https://github.com/your-org/karn-protocol/security/advisories/new)
+- **Email:** security@karn.lat
 - **Responsible Disclosure:** We follow coordinated vulnerability disclosure
 
 ---
@@ -315,8 +314,7 @@ We welcome contributions! Here's how to get started:
 
 ### Resources
 - **Documentation:** [docs/](docs/)
-- **Discussions:** [GitHub Discussions](https://github.com/your-org/karn-protocol/discussions)
-- **Issues:** [GitHub Issues](https://github.com/your-org/karn-protocol/issues)
+- **Discussions:** [Karn-lat Discussions](https://github.com/orgs/Karn-lat/discussions)
 
 ### Stay Updated
 - Watch this repo for updates

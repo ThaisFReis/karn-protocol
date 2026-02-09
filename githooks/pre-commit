@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Local guard: block committing Stellar IDs (contract IDs, public keys, secret seeds).
+#
+# Install via:
+#   scripts/install-githooks.sh
+
+exec bash scripts/scan-sensitive.sh

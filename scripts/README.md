@@ -26,6 +26,20 @@ This directory contains shell scripts for automating Karn Protocol deployment an
 
 ---
 
+## Sensitive Identifier Guard
+
+To prevent accidentally committing contract IDs or wallet keys, this repo includes:
+
+- `scripts/scan-sensitive.sh`: scans common text/code files for Stellar identifiers (`C...`, `G...`, `S...`)
+- `githooks/pre-commit`: optional local pre-commit hook that runs the scan
+- CI: `Sensitive Identifier Scan` job in `.github/workflows/ci.yml`
+
+Install the local pre-commit hook:
+
+```bash
+./install-githooks.sh
+```
+
 ## Prerequisites
 
 ### Required Software

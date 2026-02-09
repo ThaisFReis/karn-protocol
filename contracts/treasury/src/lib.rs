@@ -6,7 +6,9 @@
 mod storage;
 mod vault;
 
-use soroban_sdk::{contract, contracterror, contractimpl, token, Address, BytesN, Env, Symbol};
+use soroban_sdk::{
+    contract, contracterror, contractevent, contractimpl, token, Address, BytesN, Env,
+};
 
 use storage::{
     acquire_lock,
@@ -57,6 +59,62 @@ pub enum TreasuryError {
 #[contract]
 pub struct TreasuryContract;
 
+// Contract events (Soroban SDK >= 25).
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GovernorUpdate {
+    pub new_governor: Address,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Deposit {
+    #[topic]
+    pub receiver: Address,
+    pub shares: i128,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Transfer {
+    #[topic]
+    pub receiver: Address,
+    pub amount: i128,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct LabFunded {
+    #[topic]
+    pub lab_id: u32,
+    pub funder: Address,
+    pub total_amount: i128,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ScholarshipReleased {
+    #[topic]
+    pub lab_id: u32,
+    #[topic]
+    pub member: Address,
+    pub amount: i128,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ScholarshipWithdrawn {
+    #[topic]
+    pub member: Address,
+    pub amount: i128,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ContractUpgraded {
+    pub new_wasm_hash: BytesN<32>,
+}
+
 #[contractimpl]
 impl TreasuryContract {
     /// Initialize the Treasury contract.
@@ -85,8 +143,7 @@ impl TreasuryContract {
         let governor = get_governor(&env).ok_or(TreasuryError::NotInitialized)?;
         governor.require_auth();
         set_governor(&env, &new_governor);
-        env.events()
-            .publish((Symbol::new(&env, "governor_update"),), new_governor);
+        GovernorUpdate { new_governor }.publish(&env);
         Ok(())
     }
 
@@ -121,8 +178,7 @@ impl TreasuryContract {
 
         extend_instance_ttl(&env);
 
-        env.events()
-            .publish((Symbol::new(&env, "deposit"), receiver), shares);
+        Deposit { receiver, shares }.publish(&env);
 
         Ok(())
     }
@@ -222,8 +278,7 @@ impl TreasuryContract {
 
         extend_instance_ttl(&env);
 
-        env.events()
-            .publish((Symbol::new(&env, "transfer"), receiver), amount);
+        Transfer { receiver, amount }.publish(&env);
 
         release_lock(&env);
         Ok(())
@@ -257,7 +312,7 @@ impl TreasuryContract {
         // Transfer funds from funder to treasury
         let asset_token = get_asset_token(&env).ok_or(TreasuryError::NotInitialized)?;
         let client = token::TokenClient::new(&env, &asset_token);
-        client.transfer(&funder, &env.current_contract_address(), &total_amount);
+        client.transfer(&funder, env.current_contract_address(), &total_amount);
 
         // KRN-01: Increment restricted reserves (escrowed for scholarships)
         let current_restricted = get_restricted_reserves(&env);
@@ -278,10 +333,12 @@ impl TreasuryContract {
 
         extend_instance_ttl(&env);
 
-        env.events().publish(
-            (Symbol::new(&env, "lab_funded"), new_lab_id),
-            (funder, total_amount),
-        );
+        LabFunded {
+            lab_id: new_lab_id,
+            funder,
+            total_amount,
+        }
+        .publish(&env);
 
         Ok(new_lab_id)
     }
@@ -315,14 +372,12 @@ impl TreasuryContract {
 
         extend_instance_ttl(&env);
 
-        env.events().publish(
-            (
-                Symbol::new(&env, "scholarship_released"),
-                lab_id,
-                member.clone(),
-            ),
-            scholarship_amount,
-        );
+        ScholarshipReleased {
+            lab_id,
+            member,
+            amount: scholarship_amount,
+        }
+        .publish(&env);
 
         Ok(())
     }
@@ -370,8 +425,7 @@ impl TreasuryContract {
 
         extend_instance_ttl(&env);
 
-        env.events()
-            .publish((Symbol::new(&env, "scholarship_withdrawn"), member), amount);
+        ScholarshipWithdrawn { member, amount }.publish(&env);
 
         Ok(())
     }
@@ -385,8 +439,7 @@ impl TreasuryContract {
         env.deployer()
             .update_current_contract_wasm(new_wasm_hash.clone());
 
-        env.events()
-            .publish((Symbol::new(&env, "contract_upgraded"),), new_wasm_hash);
+        ContractUpgraded { new_wasm_hash }.publish(&env);
 
         extend_instance_ttl(&env);
         Ok(())

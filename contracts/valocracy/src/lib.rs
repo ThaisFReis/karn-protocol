@@ -10,7 +10,8 @@ mod types;
 
 use soroban_sdk::xdr::ToXdr;
 use soroban_sdk::{
-    contract, contractimpl, Address, Bytes, BytesN, Env, IntoVal, String, Symbol, Vec,
+    contract, contractevent, contractimpl, Address, Bytes, BytesN, Env, IntoVal, String, Symbol,
+    Vec,
 };
 
 use errors::ValocracyError;
@@ -43,6 +44,71 @@ enum BadgeCategory {
 
 #[contract]
 pub struct ValocracyContract;
+
+// Contract events (Soroban SDK >= 25).
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Mint {
+    #[topic]
+    pub to: Address,
+    #[topic]
+    pub token_id: u64,
+    #[topic]
+    pub valor_id: u64,
+    pub level: u64,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Initialized {
+    pub genesis_count: u32,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ValorUpdate {
+    #[topic]
+    pub valor_id: u64,
+    pub rarity: u64,
+    pub metadata: String,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct Revoke {
+    #[topic]
+    pub owner: Address,
+    #[topic]
+    pub token_id: u64,
+    pub valor_id: u64,
+    pub new_level: u64,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct GovernorUpdate {
+    pub new_governor: Address,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TreasuryUpdate {
+    pub new_treasury: Address,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct VerificationChanged {
+    #[topic]
+    pub member: Address,
+    pub verified: bool,
+}
+
+#[contractevent]
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ContractUpgraded {
+    pub new_wasm_hash: BytesN<32>,
+}
 
 #[contractimpl]
 impl ValocracyContract {
@@ -122,10 +188,13 @@ impl ValocracyContract {
             set_token_valor_id(&env, current_token_id, leadership_valor_id);
             set_token_owner(&env, current_token_id, &member);
 
-            env.events().publish(
-                (Symbol::new(&env, "mint"), member),
-                (current_token_id, leadership_valor_id, leadership_rarity),
-            );
+            Mint {
+                to: member.clone(),
+                token_id: current_token_id,
+                valor_id: leadership_valor_id,
+                level: leadership_rarity,
+            }
+            .publish(&env);
 
             current_token_id += 1;
         }
@@ -135,8 +204,10 @@ impl ValocracyContract {
 
         extend_instance_ttl(&env);
 
-        env.events()
-            .publish((Symbol::new(&env, "initialized"),), genesis_members.len());
+        Initialized {
+            genesis_count: genesis_members.len(),
+        }
+        .publish(&env);
 
         Ok(())
     }
@@ -157,10 +228,12 @@ impl ValocracyContract {
         };
         set_valor(&env, valor_id, &valor);
 
-        env.events().publish(
-            (Symbol::new(&env, "valor_update"), valor_id),
-            (rarity, metadata),
-        );
+        ValorUpdate {
+            valor_id,
+            rarity,
+            metadata,
+        }
+        .publish(&env);
         Ok(())
     }
 
@@ -275,10 +348,13 @@ impl ValocracyContract {
 
         extend_instance_ttl(&env);
 
-        env.events().publish(
-            (Symbol::new(&env, "revoke"), owner),
-            (token_id, valor_id, new_level),
-        );
+        Revoke {
+            owner,
+            token_id,
+            valor_id,
+            new_level,
+        }
+        .publish(&env);
 
         Ok(())
     }
@@ -288,8 +364,7 @@ impl ValocracyContract {
         let governor = get_governor(&env).ok_or(ValocracyError::NotInitialized)?;
         governor.require_auth();
         set_governor(&env, &new_governor);
-        env.events()
-            .publish((Symbol::new(&env, "governor_update"),), new_governor);
+        GovernorUpdate { new_governor }.publish(&env);
         Ok(())
     }
 
@@ -298,8 +373,7 @@ impl ValocracyContract {
         let governor = get_governor(&env).ok_or(ValocracyError::NotInitialized)?;
         governor.require_auth();
         set_treasury(&env, &new_treasury);
-        env.events()
-            .publish((Symbol::new(&env, "treasury_update"),), new_treasury);
+        TreasuryUpdate { new_treasury }.publish(&env);
         Ok(())
     }
 
@@ -311,8 +385,7 @@ impl ValocracyContract {
         env.deployer()
             .update_current_contract_wasm(new_wasm_hash.clone());
 
-        env.events()
-            .publish((Symbol::new(&env, "contract_upgraded"),), new_wasm_hash);
+        ContractUpgraded { new_wasm_hash }.publish(&env);
 
         Ok(())
     }
@@ -332,10 +405,7 @@ impl ValocracyContract {
 
         extend_instance_ttl(&env);
 
-        env.events().publish(
-            (Symbol::new(&env, "verification_changed"), member),
-            verified,
-        );
+        VerificationChanged { member, verified }.publish(&env);
 
         Ok(())
     }
@@ -668,10 +738,13 @@ impl ValocracyContract {
 
         extend_instance_ttl(env);
 
-        env.events().publish(
-            (Symbol::new(env, "mint"), account.clone()),
-            (token_id, valor_id, new_level),
-        );
+        Mint {
+            to: account.clone(),
+            token_id,
+            valor_id,
+            level: new_level,
+        }
+        .publish(env);
 
         // Grant Treasury shares equal to badge rarity.
         if let Some(treasury) = get_treasury(env) {

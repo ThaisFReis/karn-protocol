@@ -10,10 +10,17 @@
 
 | Contract | Address | Status |
 |----------|---------|--------|
+<<<<<<< HEAD
 | **Valocracy** | `REDACTED_CONTRACT_ID_VALOCRACY_OLD` | ✅ Initialized |
 | **Governor** | `REDACTED_CONTRACT_ID_GOVERNOR_OLD` | ✅ Initialized |
 | **Treasury** | `REDACTED_CONTRACT_ID_TREASURY_OLD` | ✅ Initialized |
 | **Test USDC** | `REDACTED_CONTRACT_ID_USDC` | ✅ Deployed |
+=======
+| **Valocracy** | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` | ✅ Initialized |
+| **Governor** | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` | ✅ Initialized |
+| **Treasury** | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` | ✅ Initialized |
+| **Test USDC** | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` | ✅ Deployed |
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 ---
 
@@ -23,9 +30,15 @@ All genesis members received **Leadership badges** (ID: 10, Rarity: 100) with eq
 
 | Member | Address | Token ID | Mana | Permanent Level |
 |--------|---------|----------|------|-----------------|
+<<<<<<< HEAD
 | **Admin** | `REDACTED_WALLET_ADDRESS_ADMIN` | 1 | 100 | 0 (decays) |
 | **Deployer** | `REDACTED_WALLET_ADDRESS_DEPLOYER` | 2 | 100 | 0 (decays) |
 | **Signer** | `REDACTED_WALLET_ADDRESS_SIGNER` | 3 | 100 | 0 (decays) |
+=======
+| **Admin** | `GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` | 1 | 100 | 0 (decays) |
+| **Deployer** | `GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` | 2 | 100 | 0 (decays) |
+| **Signer** | `GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` | 3 | 100 | 0 (decays) |
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 **Security Note:** All genesis members have `permanent_level: 0`, meaning their power decays equally over 180 days. This ensures no permanent centralization (KRN-02 resolved). ✅
 
@@ -39,8 +52,13 @@ All genesis members received **Leadership badges** (ID: 10, Rarity: 100) with eq
 
 **Parameters:**
 - Genesis Members: 3 (admin, deployer, signer)
+<<<<<<< HEAD
 - Governor: REDACTED_CONTRACT_ID_GOVERNOR_OLD
 - Treasury: REDACTED_CONTRACT_ID_TREASURY_OLD
+=======
+- Governor: CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+- Treasury: CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 - Member Badge ID: 0 (used for self-registration)
 - Badge Types:
   - ID 0: Member (rarity: 5)
@@ -61,7 +79,11 @@ All genesis members received **Leadership badges** (ID: 10, Rarity: 100) with eq
 **Transaction:** `44d908c81ce6e4ff649fc7dd2570646c9d1678029e21370bfbc6c7e7b1172d19`
 
 **Parameters:**
+<<<<<<< HEAD
 - Valocracy: REDACTED_CONTRACT_ID_VALOCRACY_OLD
+=======
+- Valocracy: CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 **Configuration (Default):**
 - Voting Delay: 300 seconds (5 minutes)
@@ -75,9 +97,15 @@ All genesis members received **Leadership badges** (ID: 10, Rarity: 100) with eq
 **Transaction:** `68b1bd4784394eacbde902ede785bba0d6aa74bb9ddc7a645783de51960bfba3`
 
 **Parameters:**
+<<<<<<< HEAD
 - Governor: REDACTED_CONTRACT_ID_GOVERNOR_OLD
 - Valocracy: REDACTED_CONTRACT_ID_VALOCRACY_OLD
 - Asset Token: REDACTED_CONTRACT_ID_USDC (test USDC)
+=======
+- Governor: CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+- Valocracy: CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+- Asset Token: CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" (test USDC)
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 **Security:** All transfers require governance votes (KRN-01 resolved). ✅
 
@@ -89,11 +117,16 @@ All contracts initialized and operational:
 
 ```bash
 # Valocracy
+<<<<<<< HEAD
 $ stellar contract invoke --id REDACTED_CONTRACT_ID_VALOCRACY_OLD \
+=======
+$ stellar contract invoke --id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --source deployer --network testnet -- total_supply
 > 3  ✅
 
 # Governor
+<<<<<<< HEAD
 $ stellar contract invoke --id REDACTED_CONTRACT_ID_GOVERNOR_OLD \
   --source deployer --network testnet -- valocracy
 > REDACTED_CONTRACT_ID_VALOCRACY_OLD  ✅
@@ -102,6 +135,16 @@ $ stellar contract invoke --id REDACTED_CONTRACT_ID_GOVERNOR_OLD \
 $ stellar contract invoke --id REDACTED_CONTRACT_ID_TREASURY_OLD \
   --source deployer --network testnet -- governor
 > REDACTED_CONTRACT_ID_GOVERNOR_OLD  ✅
+=======
+$ stellar contract invoke --id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+  --source deployer --network testnet -- valocracy
+> CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"  ✅
+
+# Treasury
+$ stellar contract invoke --id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+  --source deployer --network testnet -- governor
+> CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"  ✅
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 ```
 
 ---
@@ -116,12 +159,21 @@ NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE=Test SDF Network ; September 2015
 NEXT_PUBLIC_STELLAR_RPC_URL=https://soroban-testnet.stellar.org
 
 # Deployed & Initialized Contracts
+<<<<<<< HEAD
 NEXT_PUBLIC_VALOCRACY_CONTRACT=REDACTED_CONTRACT_ID_VALOCRACY_OLD
 NEXT_PUBLIC_GOVERNOR_CONTRACT=REDACTED_CONTRACT_ID_GOVERNOR_OLD
 NEXT_PUBLIC_TREASURY_CONTRACT=REDACTED_CONTRACT_ID_TREASURY_OLD
 
 # Test Asset
 NEXT_PUBLIC_USDC_CONTRACT=REDACTED_CONTRACT_ID_USDC
+=======
+NEXT_PUBLIC_VALOCRACY_CONTRACT=CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+NEXT_PUBLIC_GOVERNOR_CONTRACT=CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+NEXT_PUBLIC_TREASURY_CONTRACT=CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+
+# Test Asset
+NEXT_PUBLIC_USDC_CONTRACT=CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 # Backend
 NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
@@ -150,7 +202,11 @@ You can now test:
 ### 1. Self-Registration
 ```bash
 stellar contract invoke \
+<<<<<<< HEAD
   --id REDACTED_CONTRACT_ID_VALOCRACY_OLD \
+=======
+  --id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --source <new_user> \
   --network testnet \
   -- \
@@ -164,23 +220,39 @@ stellar contract invoke \
 ### 2. Check Voting Power
 ```bash
 stellar contract invoke \
+<<<<<<< HEAD
   --id REDACTED_CONTRACT_ID_VALOCRACY_OLD \
+=======
+  --id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --source deployer \
   --network testnet \
   -- \
   get_votes \
+<<<<<<< HEAD
   --account REDACTED_WALLET_ADDRESS_ADMIN
+=======
+  --account GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 ```
 
 ### 3. Create Proposal
 ```bash
 stellar contract invoke \
+<<<<<<< HEAD
   --id REDACTED_CONTRACT_ID_GOVERNOR_OLD \
+=======
+  --id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --source admin \
   --network testnet \
   -- \
   propose \
+<<<<<<< HEAD
   --proposer REDACTED_WALLET_ADDRESS_ADMIN \
+=======
+  --proposer GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --description "Test proposal" \
   --actions '[]'
 ```
@@ -188,12 +260,20 @@ stellar contract invoke \
 ### 4. Vote on Proposal
 ```bash
 stellar contract invoke \
+<<<<<<< HEAD
   --id REDACTED_CONTRACT_ID_GOVERNOR_OLD \
+=======
+  --id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --source admin \
   --network testnet \
   -- \
   cast_vote \
+<<<<<<< HEAD
   --voter REDACTED_WALLET_ADDRESS_ADMIN \
+=======
+  --voter GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --proposal_id 1 \
   --support true
 ```
@@ -233,10 +313,17 @@ Before mainnet deployment:
 ## Explorer Links
 
 ### Deployed Contracts
+<<<<<<< HEAD
 - [Valocracy](https://stellar.expert/explorer/testnet/contract/REDACTED_CONTRACT_ID_VALOCRACY_OLD)
 - [Governor](https://stellar.expert/explorer/testnet/contract/REDACTED_CONTRACT_ID_GOVERNOR_OLD)
 - [Treasury](https://stellar.expert/explorer/testnet/contract/REDACTED_CONTRACT_ID_TREASURY_OLD)
 - [Test USDC](https://stellar.expert/explorer/testnet/contract/REDACTED_CONTRACT_ID_USDC)
+=======
+- [Valocracy](https://stellar.expert/explorer/testnet/contract/CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+- [Governor](https://stellar.expert/explorer/testnet/contract/CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+- [Treasury](https://stellar.expert/explorer/testnet/contract/CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+- [Test USDC](https://stellar.expert/explorer/testnet/contract/CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 ### Initialization Transactions
 - [Valocracy Init](https://stellar.expert/explorer/testnet/tx/376279977686ba159d8bd5f6b94a6f0136e2d9ddd63352634bd3ae5fe8d5044f)

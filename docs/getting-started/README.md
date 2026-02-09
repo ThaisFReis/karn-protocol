@@ -241,7 +241,11 @@ import * as StellarSdk from '@stellar/stellar-sdk';
 // Initialize client
 const client = new ValocracyClient({
   networkPassphrase: 'Test SDF Network ; September 2015',
+<<<<<<< HEAD
   contractId: 'REDACTED_CONTRACT_ID_VALOCRACY',
+=======
+  contractId: 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"',
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   rpcUrl: 'https://soroban-testnet.stellar.org',
 });
 
@@ -562,9 +566,15 @@ You can customize:
 
 | Contract | Address |
 |----------|---------|
+<<<<<<< HEAD
 | **Valocracy** | `REDACTED_CONTRACT_ID_VALOCRACY` |
 | **Governor** | `REDACTED_CONTRACT_ID_GOVERNOR` |
 | **Treasury** | `REDACTED_CONTRACT_ID_TREASURY` |
+=======
+| **Valocracy** | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` |
+| **Governor** | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` |
+| **Treasury** | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` |
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 ### Network Configuration
 

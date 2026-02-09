@@ -74,7 +74,11 @@ Shows:
 const CONFIG = {
     networkPassphrase: 'Test SDF Network ; September 2015',
     rpcUrl: 'https://soroban-testnet.stellar.org',
+<<<<<<< HEAD
     valocracyContract: 'REDACTED_CONTRACT_ID_VALOCRACY',
+=======
+    valocracyContract: 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"',
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 };
 ```
 

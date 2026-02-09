@@ -294,7 +294,11 @@ stellar contract deploy \
   --network testnet
 
 # Output: CONTRACT_ID (save this!)
+<<<<<<< HEAD
 # Example: REDACTED_CONTRACT_ID_VALOCRACY
+=======
+# Example: CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 ```
 
 ### Deploy Governor
@@ -344,7 +348,11 @@ stellar contract invoke \
   --source founder-secret \
   --network testnet \
   -- initialize \
+<<<<<<< HEAD
   --founder REDACTED_WALLET_ADDRESS_FOUNDER \
+=======
+  --founder GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --governor GOVERNOR_CONTRACT_ID \
   --treasury TREASURY_CONTRACT_ID \
   --member_valor_id 0 \
@@ -426,7 +434,11 @@ stellar contract invoke \
   --id VALOCRACY_CONTRACT_ID \
   --network testnet \
   -- get_votes \
+<<<<<<< HEAD
   --account REDACTED_WALLET_ADDRESS_FOUNDER
+=======
+  --account GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 ```
 
 ---

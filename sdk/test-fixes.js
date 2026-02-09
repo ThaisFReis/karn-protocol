@@ -18,7 +18,11 @@ try {
   const valocracy = new ValocracyClient(
     'Test SDF Network ; September 2015',
     'https://soroban-testnet.stellar.org',
+<<<<<<< HEAD
     'REDACTED_CONTRACT_ID_VALOCRACY'
+=======
+    'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"'
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   );
 
   console.log('   ✓ Import from ./dist/clients/index.js works\n');
@@ -36,7 +40,11 @@ try {
   const governor = new GovernorClient(
     'Test SDF Network ; September 2015',
     'https://soroban-testnet.stellar.org',
+<<<<<<< HEAD
     'REDACTED_CONTRACT_ID_GOVERNOR'
+=======
+    'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"'
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   );
 
   console.log('   ✓ Import from ./dist/index.js works');

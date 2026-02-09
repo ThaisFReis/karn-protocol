@@ -11,9 +11,15 @@ Karn Protocol consists of three interconnected Soroban smart contracts implement
 
 | Contract | Purpose | Testnet Address |
 |----------|---------|-----------------|
+<<<<<<< HEAD
 | **Valocracy** | Core IDNFT (soulbound badges) with decaying voting power | `REDACTED_CONTRACT_ID_VALOCRACY` |
 | **Governor** | Proposal creation, voting, and execution | `REDACTED_CONTRACT_ID_GOVERNOR` |
 | **Treasury** | Asset management and scholarship distribution | `REDACTED_CONTRACT_ID_TREASURY` |
+=======
+| **Valocracy** | Core IDNFT (soulbound badges) with decaying voting power | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` |
+| **Governor** | Proposal creation, voting, and execution | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` |
+| **Treasury** | Asset management and scholarship distribution | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` |
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 ---
 
@@ -132,9 +138,15 @@ import { ValocracyClient } from '@karn_lat/protocol-sdk';
 const client = new ValocracyClient({ /* config */ });
 
 await client.initialize({
+<<<<<<< HEAD
   founder: 'REDACTED_WALLET_ADDRESS_FOUNDER',
   governor: 'REDACTED_CONTRACT_ID_GOVERNOR',
   treasury: 'REDACTED_CONTRACT_ID_TREASURY',
+=======
+  founder: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"',
+  governor: 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"',
+  treasury: 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"',
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   member_valor_id: 0,
   valor_ids: [0, 1, 10, 20, 60, 70],
   valor_rarities: [5, 100, 50, 20, 10, 75],
@@ -1629,10 +1641,17 @@ clear_guard(&env);
 
 | Contract | Address | Deployed |
 |----------|---------|----------|
+<<<<<<< HEAD
 | Valocracy | `REDACTED_CONTRACT_ID_VALOCRACY` | ✅ |
 | Governor | `REDACTED_CONTRACT_ID_GOVERNOR` | ✅ |
 | Treasury | `REDACTED_CONTRACT_ID_TREASURY` | ✅ |
 | Founder | `REDACTED_WALLET_ADDRESS_FOUNDER` | - |
+=======
+| Valocracy | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` | ✅ |
+| Governor | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` | ✅ |
+| Treasury | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` | ✅ |
+| Founder | `GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` | - |
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 ## Mainnet
 

@@ -2,24 +2,40 @@
 
 **Deployment Date:** 2026-02-07
 **Network:** Stellar Testnet
+<<<<<<< HEAD
 **Deployer:** REDACTED_WALLET_ADDRESS_DEPLOYER
+=======
+**Deployer:** GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 ---
 
 ## Deployed Contract Addresses
 
 ### Valocracy Contract ✅
+<<<<<<< HEAD
 **Address:** `REDACTED_CONTRACT_ID_VALOCRACY_OLD`
+=======
+**Address:** `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"`
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 - **WASM Hash:** ae32f937c3ec75e2cbd78faa7f2d5817c76d5846cc161e4758874b0374e314a8
 - **Functions:** 29 exported (initialize, mint, self_register, get_votes, etc.)
 
 ### Governor Contract ✅
+<<<<<<< HEAD
 **Address:** `REDACTED_CONTRACT_ID_GOVERNOR_OLD`
+=======
+**Address:** `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"`
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 - **WASM Hash:** ce6dc503e72609fda687564d29847df19a53979431d36b339565d8bb267cc6aa
 - **Functions:** 12 exported (initialize, propose, cast_vote, execute, etc.)
 
 ### Treasury Contract ✅
+<<<<<<< HEAD
 **Address:** `REDACTED_CONTRACT_ID_TREASURY_OLD`
+=======
+**Address:** `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"`
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 - **WASM Hash:** ed2c16e984faf0547307aad45f6590a8576d2eb1fe3a21406e7b92a28d43d677
 - **Functions:** 19 exported (initialize, fund_lab, transfer, etc.)
 
@@ -44,14 +60,23 @@
 
 ```bash
 stellar contract invoke \
+<<<<<<< HEAD
   --id REDACTED_CONTRACT_ID_VALOCRACY_OLD \
+=======
+  --id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --source deployer \
   --network testnet \
   -- \
   initialize \
   --genesis-members '["<GENESIS_MEMBER_1>", "<GENESIS_MEMBER_2>", "<GENESIS_MEMBER_3>"]' \
+<<<<<<< HEAD
   --governor REDACTED_CONTRACT_ID_GOVERNOR_OLD \
   --treasury REDACTED_CONTRACT_ID_TREASURY_OLD \
+=======
+  --governor CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+  --treasury CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --member-valor-id 0 \
   --valor-ids '[0, 10, 20, 70]' \
   --valor-rarities '[5, 100, 20, 50]' \
@@ -67,25 +92,42 @@ stellar contract invoke \
 
 ```bash
 stellar contract invoke \
+<<<<<<< HEAD
   --id REDACTED_CONTRACT_ID_GOVERNOR_OLD \
+=======
+  --id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --source deployer \
   --network testnet \
   -- \
   initialize \
+<<<<<<< HEAD
   --valocracy REDACTED_CONTRACT_ID_VALOCRACY_OLD
+=======
+  --valocracy CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 ```
 
 ### 3. Initialize Treasury
 
 ```bash
 stellar contract invoke \
+<<<<<<< HEAD
   --id REDACTED_CONTRACT_ID_TREASURY_OLD \
+=======
+  --id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --source deployer \
   --network testnet \
   -- \
   initialize \
+<<<<<<< HEAD
   --governor REDACTED_CONTRACT_ID_GOVERNOR_OLD \
   --valocracy REDACTED_CONTRACT_ID_VALOCRACY_OLD \
+=======
+  --governor CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+  --valocracy CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --asset <USDC_OR_XLM_TOKEN_ADDRESS>
 ```
 
@@ -103,9 +145,15 @@ NEXT_PUBLIC_STELLAR_NETWORK_PASSPHRASE=Test SDF Network ; September 2015
 NEXT_PUBLIC_STELLAR_RPC_URL=https://soroban-testnet.stellar.org
 
 # Contract Addresses (NEW DEPLOYMENT)
+<<<<<<< HEAD
 NEXT_PUBLIC_VALOCRACY_CONTRACT=REDACTED_CONTRACT_ID_VALOCRACY_OLD
 NEXT_PUBLIC_GOVERNOR_CONTRACT=REDACTED_CONTRACT_ID_GOVERNOR_OLD
 NEXT_PUBLIC_TREASURY_CONTRACT=REDACTED_CONTRACT_ID_TREASURY_OLD
+=======
+NEXT_PUBLIC_VALOCRACY_CONTRACT=CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+NEXT_PUBLIC_GOVERNOR_CONTRACT=CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+NEXT_PUBLIC_TREASURY_CONTRACT=CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 # Backend
 NEXT_PUBLIC_BACKEND_URL=http://localhost:3001
@@ -131,7 +179,11 @@ After initialization, verify:
 **Check Valocracy total supply:**
 ```bash
 stellar contract invoke \
+<<<<<<< HEAD
   --id REDACTED_CONTRACT_ID_VALOCRACY_OLD \
+=======
+  --id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --network testnet \
   -- total_supply
 ```
@@ -139,7 +191,11 @@ stellar contract invoke \
 **Check Governor proposal count:**
 ```bash
 stellar contract invoke \
+<<<<<<< HEAD
   --id REDACTED_CONTRACT_ID_GOVERNOR_OLD \
+=======
+  --id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --network testnet \
   -- proposal_count
 ```
@@ -147,7 +203,11 @@ stellar contract invoke \
 **Check Treasury governor:**
 ```bash
 stellar contract invoke \
+<<<<<<< HEAD
   --id REDACTED_CONTRACT_ID_TREASURY_OLD \
+=======
+  --id CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" \
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
   --network testnet \
   -- governor
 ```
@@ -157,9 +217,15 @@ stellar contract invoke \
 ## Explorer Links
 
 ### Stellar Expert (Testnet)
+<<<<<<< HEAD
 - **Valocracy:** https://stellar.expert/explorer/testnet/contract/REDACTED_CONTRACT_ID_VALOCRACY_OLD
 - **Governor:** https://stellar.expert/explorer/testnet/contract/REDACTED_CONTRACT_ID_GOVERNOR_OLD
 - **Treasury:** https://stellar.expert/explorer/testnet/contract/REDACTED_CONTRACT_ID_TREASURY_OLD
+=======
+- **Valocracy:** https://stellar.expert/explorer/testnet/contract/CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+- **Governor:** https://stellar.expert/explorer/testnet/contract/CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+- **Treasury:** https://stellar.expert/explorer/testnet/contract/CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 ---
 
@@ -200,9 +266,15 @@ Watch for:
 
 | Timestamp | Contract | Address | Deployer | Status |
 |-----------|----------|---------|----------|--------|
+<<<<<<< HEAD
 | 2026-02-07 | Valocracy | REDACTED_CONTRACT_ID_VALOCRACY_OLD | deployer | ✅ Deployed |
 | 2026-02-07 | Governor | REDACTED_CONTRACT_ID_GOVERNOR_OLD | deployer | ✅ Deployed |
 | 2026-02-07 | Treasury | REDACTED_CONTRACT_ID_TREASURY_OLD | deployer | ✅ Deployed |
+=======
+| 2026-02-07 | Valocracy | CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" | deployer | ✅ Deployed |
+| 2026-02-07 | Governor | CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" | deployer | ✅ Deployed |
+| 2026-02-07 | Treasury | CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" | deployer | ✅ Deployed |
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 ---
 

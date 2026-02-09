@@ -31,7 +31,11 @@ console.log('✓ Root import works!');
 const client = new ValocracyClient(
   'Test SDF Network ; September 2015',
   'https://soroban-testnet.stellar.org',
+<<<<<<< HEAD
   'REDACTED_CONTRACT_ID_VALOCRACY'
+=======
+  'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"'
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 );
 
 console.log('✓ Client instantiated successfully!');

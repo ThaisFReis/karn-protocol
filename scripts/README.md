@@ -26,6 +26,7 @@ This directory contains shell scripts for automating Karn Protocol deployment an
 
 ---
 
+<<<<<<< HEAD
 ## Sensitive Identifier Guard
 
 To prevent accidentally committing contract IDs or wallet keys, this repo includes:
@@ -40,6 +41,8 @@ Install the local pre-commit hook:
 ./install-githooks.sh
 ```
 
+=======
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 ## Prerequisites
 
 ### Required Software
@@ -198,9 +201,15 @@ FOUNDER_SECRET=SXXXXXX... ./deploy-contracts.sh mainnet
 
 **Output:**
 ```
+<<<<<<< HEAD
 Valocracy: REDACTED_CONTRACT_ID_VALOCRACY
 Governor:  REDACTED_CONTRACT_ID_GOVERNOR
 Treasury:  REDACTED_CONTRACT_ID_TREASURY
+=======
+Valocracy: CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+Governor:  CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+Treasury:  CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+>>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 ```
 
 ---

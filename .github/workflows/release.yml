@@ -33,6 +33,8 @@ jobs:
 
       - name: Install Soroban CLI
         run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libdbus-1-dev
           cargo install --locked soroban-cli --version 25.1.0 --force
           soroban --version
 
@@ -223,6 +225,8 @@ jobs:
 
       - name: Install Soroban CLI
         run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libdbus-1-dev
           cargo install --locked soroban-cli --version 25.1.0 --force
           soroban --version
 

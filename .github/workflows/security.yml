@@ -36,7 +36,8 @@ jobs:
           cargo generate-lockfile
           # RUSTSEC-2024-0436 is an "unmaintained" warning on paste via the Soroban toolchain deps.
           # Keep failing on other warnings/vulns, but ignore this until upstream removes the dependency.
-          cargo audit --deny warnings --ignore RUSTSEC-2024-0436
+          # RUSTSEC-2024-0388 is also an "unmaintained" warning via arkworks deps in soroban-env-host.
+          cargo audit --deny warnings --ignore RUSTSEC-2024-0436 --ignore RUSTSEC-2024-0388
 
   rust-outdated:
     name: Check Outdated Dependencies
@@ -215,7 +216,10 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Install Soroban CLI
-        run: cargo install --locked soroban-cli --version 25.1.0 --force
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libdbus-1-dev
+          cargo install --locked soroban-cli --version 25.1.0 --force
 
       - name: Build contracts
         working-directory: contracts

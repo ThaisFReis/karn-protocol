@@ -47,67 +47,47 @@ pub struct ValocracyContract;
 
 // Contract events (Soroban SDK >= 25).
 #[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Mint {
-    #[topic]
-    pub to: Address,
-    #[topic]
-    pub token_id: u64,
-    #[topic]
-    pub valor_id: u64,
-    pub level: u64,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Initialized {
-    pub genesis_count: u32,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ValorUpdate {
-    #[topic]
-    pub valor_id: u64,
-    pub rarity: u64,
-    pub metadata: String,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Revoke {
-    #[topic]
-    pub owner: Address,
-    #[topic]
-    pub token_id: u64,
-    pub valor_id: u64,
-    pub new_level: u64,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct GovernorUpdate {
-    pub new_governor: Address,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct TreasuryUpdate {
-    pub new_treasury: Address,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct VerificationChanged {
-    #[topic]
-    pub member: Address,
-    pub verified: bool,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ContractUpgraded {
-    pub new_wasm_hash: BytesN<32>,
+pub enum ValocracyEvent {
+    Mint {
+        #[topic]
+        to: Address,
+        #[topic]
+        token_id: u64,
+        #[topic]
+        valor_id: u64,
+        level: u64,
+    },
+    Initialized {
+        genesis_count: u32,
+    },
+    ValorUpdate {
+        #[topic]
+        valor_id: u64,
+        rarity: u64,
+        metadata: String,
+    },
+    Revoke {
+        #[topic]
+        owner: Address,
+        #[topic]
+        token_id: u64,
+        valor_id: u64,
+        new_level: u64,
+    },
+    GovernorUpdate {
+        new_governor: Address,
+    },
+    TreasuryUpdate {
+        new_treasury: Address,
+    },
+    VerificationChanged {
+        #[topic]
+        member: Address,
+        verified: bool,
+    },
+    ContractUpgraded {
+        new_wasm_hash: BytesN<32>,
+    },
 }
 
 #[contractimpl]
@@ -188,7 +168,7 @@ impl ValocracyContract {
             set_token_valor_id(&env, current_token_id, leadership_valor_id);
             set_token_owner(&env, current_token_id, &member);
 
-            Mint {
+            ValocracyEvent::Mint {
                 to: member.clone(),
                 token_id: current_token_id,
                 valor_id: leadership_valor_id,
@@ -204,7 +184,7 @@ impl ValocracyContract {
 
         extend_instance_ttl(&env);
 
-        Initialized {
+        ValocracyEvent::Initialized {
             genesis_count: genesis_members.len(),
         }
         .publish(&env);
@@ -228,7 +208,7 @@ impl ValocracyContract {
         };
         set_valor(&env, valor_id, &valor);
 
-        ValorUpdate {
+        ValocracyEvent::ValorUpdate {
             valor_id,
             rarity,
             metadata,
@@ -348,7 +328,7 @@ impl ValocracyContract {
 
         extend_instance_ttl(&env);
 
-        Revoke {
+        ValocracyEvent::Revoke {
             owner,
             token_id,
             valor_id,
@@ -364,7 +344,7 @@ impl ValocracyContract {
         let governor = get_governor(&env).ok_or(ValocracyError::NotInitialized)?;
         governor.require_auth();
         set_governor(&env, &new_governor);
-        GovernorUpdate { new_governor }.publish(&env);
+        ValocracyEvent::GovernorUpdate { new_governor }.publish(&env);
         Ok(())
     }
 
@@ -373,7 +353,7 @@ impl ValocracyContract {
         let governor = get_governor(&env).ok_or(ValocracyError::NotInitialized)?;
         governor.require_auth();
         set_treasury(&env, &new_treasury);
-        TreasuryUpdate { new_treasury }.publish(&env);
+        ValocracyEvent::TreasuryUpdate { new_treasury }.publish(&env);
         Ok(())
     }
 
@@ -385,7 +365,7 @@ impl ValocracyContract {
         env.deployer()
             .update_current_contract_wasm(new_wasm_hash.clone());
 
-        ContractUpgraded { new_wasm_hash }.publish(&env);
+        ValocracyEvent::ContractUpgraded { new_wasm_hash }.publish(&env);
 
         Ok(())
     }
@@ -405,7 +385,7 @@ impl ValocracyContract {
 
         extend_instance_ttl(&env);
 
-        VerificationChanged { member, verified }.publish(&env);
+        ValocracyEvent::VerificationChanged { member, verified }.publish(&env);
 
         Ok(())
     }
@@ -738,7 +718,7 @@ impl ValocracyContract {
 
         extend_instance_ttl(env);
 
-        Mint {
+        ValocracyEvent::Mint {
             to: account.clone(),
             token_id,
             valor_id,

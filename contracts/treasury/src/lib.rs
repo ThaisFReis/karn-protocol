@@ -61,58 +61,41 @@ pub struct TreasuryContract;
 
 // Contract events (Soroban SDK >= 25).
 #[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct GovernorUpdate {
-    pub new_governor: Address,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Deposit {
-    #[topic]
-    pub receiver: Address,
-    pub shares: i128,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct Transfer {
-    #[topic]
-    pub receiver: Address,
-    pub amount: i128,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct LabFunded {
-    #[topic]
-    pub lab_id: u32,
-    pub funder: Address,
-    pub total_amount: i128,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ScholarshipReleased {
-    #[topic]
-    pub lab_id: u32,
-    #[topic]
-    pub member: Address,
-    pub amount: i128,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ScholarshipWithdrawn {
-    #[topic]
-    pub member: Address,
-    pub amount: i128,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ContractUpgraded {
-    pub new_wasm_hash: BytesN<32>,
+pub enum TreasuryEvent {
+    GovernorUpdate {
+        new_governor: Address,
+    },
+    Deposit {
+        #[topic]
+        receiver: Address,
+        shares: i128,
+    },
+    Transfer {
+        #[topic]
+        receiver: Address,
+        amount: i128,
+    },
+    LabFunded {
+        #[topic]
+        lab_id: u32,
+        funder: Address,
+        total_amount: i128,
+    },
+    ScholarshipReleased {
+        #[topic]
+        lab_id: u32,
+        #[topic]
+        member: Address,
+        amount: i128,
+    },
+    ScholarshipWithdrawn {
+        #[topic]
+        member: Address,
+        amount: i128,
+    },
+    ContractUpgraded {
+        new_wasm_hash: BytesN<32>,
+    },
 }
 
 #[contractimpl]
@@ -143,7 +126,7 @@ impl TreasuryContract {
         let governor = get_governor(&env).ok_or(TreasuryError::NotInitialized)?;
         governor.require_auth();
         set_governor(&env, &new_governor);
-        GovernorUpdate { new_governor }.publish(&env);
+        TreasuryEvent::GovernorUpdate { new_governor }.publish(&env);
         Ok(())
     }
 
@@ -178,7 +161,7 @@ impl TreasuryContract {
 
         extend_instance_ttl(&env);
 
-        Deposit { receiver, shares }.publish(&env);
+        TreasuryEvent::Deposit { receiver, shares }.publish(&env);
 
         Ok(())
     }
@@ -278,7 +261,7 @@ impl TreasuryContract {
 
         extend_instance_ttl(&env);
 
-        Transfer { receiver, amount }.publish(&env);
+        TreasuryEvent::Transfer { receiver, amount }.publish(&env);
 
         release_lock(&env);
         Ok(())
@@ -333,7 +316,7 @@ impl TreasuryContract {
 
         extend_instance_ttl(&env);
 
-        LabFunded {
+        TreasuryEvent::LabFunded {
             lab_id: new_lab_id,
             funder,
             total_amount,
@@ -372,7 +355,7 @@ impl TreasuryContract {
 
         extend_instance_ttl(&env);
 
-        ScholarshipReleased {
+        TreasuryEvent::ScholarshipReleased {
             lab_id,
             member,
             amount: scholarship_amount,
@@ -425,7 +408,7 @@ impl TreasuryContract {
 
         extend_instance_ttl(&env);
 
-        ScholarshipWithdrawn { member, amount }.publish(&env);
+        TreasuryEvent::ScholarshipWithdrawn { member, amount }.publish(&env);
 
         Ok(())
     }
@@ -439,7 +422,7 @@ impl TreasuryContract {
         env.deployer()
             .update_current_contract_wasm(new_wasm_hash.clone());
 
-        ContractUpgraded { new_wasm_hash }.publish(&env);
+        TreasuryEvent::ContractUpgraded { new_wasm_hash }.publish(&env);
 
         extend_instance_ttl(&env);
         Ok(())

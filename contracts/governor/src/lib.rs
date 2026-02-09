@@ -48,40 +48,29 @@ pub enum GovernorError {
 
 // Contract events (Soroban SDK >= 25).
 #[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ConfigUpdate;
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ProposalCreated {
-    #[topic]
-    pub proposal_id: u64,
-    #[topic]
-    pub proposer: Address,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct VoteCast {
-    #[topic]
-    pub proposal_id: u64,
-    #[topic]
-    pub voter: Address,
-    pub support: bool,
-    pub voting_power: u64,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ProposalExecuted {
-    #[topic]
-    pub proposal_id: u64,
-}
-
-#[contractevent]
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub struct ContractUpgraded {
-    pub new_wasm_hash: BytesN<32>,
+pub enum GovernorEvent {
+    ConfigUpdate,
+    ProposalCreated {
+        #[topic]
+        proposal_id: u64,
+        #[topic]
+        proposer: Address,
+    },
+    VoteCast {
+        #[topic]
+        proposal_id: u64,
+        #[topic]
+        voter: Address,
+        support: bool,
+        voting_power: u64,
+    },
+    ProposalExecuted {
+        #[topic]
+        proposal_id: u64,
+    },
+    ContractUpgraded {
+        new_wasm_hash: BytesN<32>,
+    },
 }
 
 #[contract]
@@ -113,7 +102,7 @@ impl GovernorContract {
 
         set_config(&env, &config);
 
-        ConfigUpdate.publish(&env);
+        GovernorEvent::ConfigUpdate.publish(&env);
         Ok(())
     }
 
@@ -186,7 +175,7 @@ impl GovernorContract {
 
         extend_instance_ttl(&env);
 
-        ProposalCreated {
+        GovernorEvent::ProposalCreated {
             proposal_id,
             proposer,
         }
@@ -244,7 +233,7 @@ impl GovernorContract {
         set_proposal(&env, proposal_id, &proposal);
         set_vote(&env, proposal_id, &voter, support);
 
-        VoteCast {
+        GovernorEvent::VoteCast {
             proposal_id,
             voter,
             support,
@@ -286,7 +275,7 @@ impl GovernorContract {
             );
         }
 
-        ProposalExecuted { proposal_id }.publish(&env);
+        GovernorEvent::ProposalExecuted { proposal_id }.publish(&env);
 
         release_lock(&env);
         Ok(())
@@ -361,7 +350,7 @@ impl GovernorContract {
         env.deployer()
             .update_current_contract_wasm(new_wasm_hash.clone());
 
-        ContractUpgraded { new_wasm_hash }.publish(&env);
+        GovernorEvent::ContractUpgraded { new_wasm_hash }.publish(&env);
 
         extend_instance_ttl(&env);
         Ok(())

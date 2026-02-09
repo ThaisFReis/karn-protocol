@@ -328,7 +328,7 @@ npm test
 Update Soroban CLI version in workflows:
 ```yaml
 - name: Install Soroban CLI
-  run: cargo install --locked soroban-cli@<version> --features opt
+  run: cargo install --locked soroban-cli --version <version> --force
 ```
 
 Check latest version: https://github.com/stellar/soroban-tools/releases

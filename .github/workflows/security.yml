@@ -213,7 +213,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Install Soroban CLI
-        run: cargo install --locked soroban-cli --features opt --force
+        run: cargo install --locked soroban-cli --version 25.1.0 --force
 
       - name: Build contracts
         working-directory: contracts

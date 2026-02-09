@@ -33,7 +33,7 @@ jobs:
 
       - name: Install Soroban CLI
         run: |
-          cargo install --locked soroban-cli --features opt
+          cargo install --locked soroban-cli --version 25.1.0 --force
           soroban --version
 
       - name: Build Valocracy contract (optimized)
@@ -223,7 +223,7 @@ jobs:
 
       - name: Install Soroban CLI
         run: |
-          cargo install --locked soroban-cli --features opt
+          cargo install --locked soroban-cli --version 25.1.0 --force
           soroban --version
 
       - name: Download contract bundle

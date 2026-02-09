@@ -99,20 +99,6 @@
 
 ---
 
-## 🗄️ Archive
-
-Historical documents and deprecated content:
-
-| Document | Reason |
-|----------|--------|
-| [KRN-03 Analysis](archive/KRN-03_ANALYSIS.md) | Consolidated into SECURITY_HARDENING.md |
-| [KRN-03 Implementation](archive/KRN-03_IMPLEMENTATION_SUMMARY.md) | Consolidated into SECURITY_HARDENING.md |
-| [KRN-04 Implementation](archive/KRN-04_IMPLEMENTATION_SUMMARY.md) | Consolidated into SECURITY_HARDENING.md |
-| [KRN-05 Implementation](archive/KRN-05_IMPLEMENTATION_SUMMARY.md) | Consolidated into SECURITY_HARDENING.md |
-| [Security Complete](archive/SECURITY_COMPLETE.md) | Consolidated into SECURITY_HARDENING.md |
-| [Security Status](archive/SECURITY_STATUS.md) | Consolidated into SECURITY_HARDENING.md |
-| [Implementation Summary](archive/IMPLEMENTATION_SUMMARY.md) | Historical Genesis Council changes |
-
 ---
 
 ## 🎯 By Use Case
@@ -144,7 +130,7 @@ Historical documents and deprecated content:
 
 | Category | Documents | Status |
 |----------|-----------|--------|
-| **Security** | 3 primary, 6 archived | ✅ Complete |
+| **Security** | 3 primary | ✅ Complete |
 | **Architecture** | 2 documents | ✅ Current |
 | **Guides** | 3 documents | ✅ Current |
 | **Contracts** | 2 documents | ✅ Current |
@@ -152,7 +138,6 @@ Historical documents and deprecated content:
 | **SDK** | 2 documents | ✅ Current |
 
 **Total Active Documents:** 14
-**Total Archived Documents:** 9
 
 ---
 

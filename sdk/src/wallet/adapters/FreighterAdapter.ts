@@ -21,9 +21,41 @@ type FreighterModule = {
     xdr: string,
     opts?: { network?: string; networkPassphrase?: string; accountToSign?: string }
   ) => Promise<string>;
+  // Message signing varies by Freighter version.
+  signBlob?: (message: string) => Promise<unknown>;
+  signMessage?: (message: string) => Promise<unknown>;
   getNetwork?: () => Promise<string>;
   getNetworkDetails?: () => Promise<{ network: string; networkPassphrase: string }>;
 };
+
+function normalizeSignaturePayload(result: unknown): string {
+  if (typeof result === 'string') return result;
+
+  if (result instanceof Uint8Array) {
+    let binary = '';
+    for (let i = 0; i < result.length; i += 1) {
+      binary += String.fromCharCode(result[i]);
+    }
+    return btoa(binary);
+  }
+
+  if (result && typeof result === 'object') {
+    const payload = result as Record<string, unknown>;
+    const candidate =
+      payload.signature ??
+      payload.signedBlob ??
+      payload.signed_blob ??
+      payload.signedMessage ??
+      payload.signed_message ??
+      (payload.data && typeof payload.data === 'object'
+        ? (payload.data as Record<string, unknown>).signature
+        : undefined);
+
+    if (typeof candidate === 'string') return candidate;
+  }
+
+  throw new Error('Freighter returned an unsupported signature format.');
+}
 
 export class FreighterAdapter implements WalletAdapter {
   type = WalletType.FREIGHTER;
@@ -178,6 +210,28 @@ export class FreighterAdapter implements WalletAdapter {
         WalletType.FREIGHTER
       );
     }
+  }
+
+  async signMessage(message: string): Promise<string> {
+    const freighter = await this.loadFreighter();
+
+    // Prefer v2+ blob signing if available.
+    if (typeof freighter.signBlob === 'function') {
+      const result = await freighter.signBlob(message);
+      return normalizeSignaturePayload(result);
+    }
+
+    // Backwards-compatible message signing.
+    if (typeof freighter.signMessage === 'function') {
+      const result = await freighter.signMessage(message);
+      return normalizeSignaturePayload(result);
+    }
+
+    throw new WalletError(
+      'Freighter message signing is not available in this version.',
+      WalletErrorCode.UNSUPPORTED_METHOD,
+      WalletType.FREIGHTER
+    );
   }
 
   async getNetwork(): Promise<string> {

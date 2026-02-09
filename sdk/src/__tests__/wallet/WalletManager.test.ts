@@ -83,10 +83,11 @@ describe('WalletManager', () => {
   });
 
   describe('getAvailableWallets', () => {
-    it('should return empty array when no wallets installed', async () => {
+    it('should return Albedo when no extension wallets installed', async () => {
       const available = await manager.getAvailableWallets();
 
-      expect(available).toEqual([]);
+      // Albedo is web-based and treated as available in browser environments.
+      expect(available.some(w => w.type === WalletType.ALBEDO)).toBe(true);
     });
 
     it('should return Freighter when installed', async () => {
@@ -95,9 +96,9 @@ describe('WalletManager', () => {
 
       const available = await manager.getAvailableWallets();
 
-      expect(available).toHaveLength(1);
-      expect(available[0].type).toBe(WalletType.FREIGHTER);
-      expect(available[0].name).toBe('Freighter');
+      // Freighter + Albedo
+      expect(available.some(w => w.type === WalletType.FREIGHTER)).toBe(true);
+      expect(available.some(w => w.type === WalletType.ALBEDO)).toBe(true);
     });
 
     it('should return Albedo (always available as web-based)', async () => {

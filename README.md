@@ -79,19 +79,19 @@ Karn Protocol is **open-source governance infrastructure** that replaces plutocr
 Karn Protocol consists of **3 modular smart contracts**:
 
 ```
-┌─────────────────────────────────────────────────┐
-│                  Karn Protocol                  │
-├─────────────────────────────────────────────────┤
-│                                                 │
-│  ┌──────────────┐  ┌──────────────┐  ┌────────┐│
-│  │  Valocracy   │  │   Governor   │  │Treasury││
-│  │              │  │              │  │        ││
-│  │ • Identity   │←→│ • Proposals  │←→│• Vault ││
-│  │ • Badges     │  │ • Voting     │  │• Funds ││
-│  │ • Mana       │  │ • Execution  │  │        ││
-│  └──────────────┘  └──────────────┘  └────────┘│
-│                                                 │
-└─────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│                  Karn Protocol                   │
+├──────────────────────────────────────────────────┤
+│                                                  │
+│  ┌──────────────┐  ┌──────────────┐  ┌────────┐  │
+│  │  Valocracy   │  │   Governor   │  │Treasury│  │
+│  │              │  │              │  │        │  │
+│  │ • Identity   │←→│ • Proposals  │←→│• Vault │  │
+│  │ • Badges     │  │ • Voting     │  │• Funds │  │
+│  │ • Mana       │  │ • Execution  │  │        │  │
+│  └──────────────┘  └──────────────┘  └────────┘  │
+│                                                  │
+└──────────────────────────────────────────────────┘
 ```
 
 ### 1. Valocracy Contract

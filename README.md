@@ -314,7 +314,7 @@ We welcome contributions! Here's how to get started:
 
 ### Resources
 - **Documentation:** [docs/](docs/)
-- **Discussions:** [Karn-lat Discussions](https://github.com/orgs/Karn-lat/discussions)
+- **Discussions:** [Karn-lat Discussions](https://github.com/ThaisFReis/karn-protocol/discussions/)
 
 ### Stay Updated
 - Watch this repo for updates

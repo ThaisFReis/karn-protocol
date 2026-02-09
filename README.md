@@ -283,7 +283,7 @@ Volunteers and contributors gain voice through verified impact, not donations.
 **Documentation:** [docs/SECURITY_HARDENING.md](docs/SECURITY_HARDENING.md)
 
 ### Report Vulnerabilities
-- **Email:** security@karn.protocol (if available)
+- **Email:** security@karn.protocol
 - **GitHub:** [Create Security Advisory](https://github.com/your-org/karn-protocol/security/advisories/new)
 - **Responsible Disclosure:** We follow coordinated vulnerability disclosure
 
@@ -307,7 +307,7 @@ We welcome contributions! Here's how to get started:
 4. Ensure all tests pass (`cargo test`)
 5. Submit a Pull Request
 
-**Full guidelines:** [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md) (if exists)
+**Full guidelines:** [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md)
 
 ---
 

@@ -11,15 +11,9 @@ Karn Protocol consists of three interconnected Soroban smart contracts implement
 
 | Contract | Purpose | Testnet Address |
 |----------|---------|-----------------|
-<<<<<<< HEAD
 | **Valocracy** | Core IDNFT (soulbound badges) with decaying voting power | `REDACTED_CONTRACT_ID_VALOCRACY` |
 | **Governor** | Proposal creation, voting, and execution | `REDACTED_CONTRACT_ID_GOVERNOR` |
 | **Treasury** | Asset management and scholarship distribution | `REDACTED_CONTRACT_ID_TREASURY` |
-=======
-| **Valocracy** | Core IDNFT (soulbound badges) with decaying voting power | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` |
-| **Governor** | Proposal creation, voting, and execution | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` |
-| **Treasury** | Asset management and scholarship distribution | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` |
->>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
 
 ---
 

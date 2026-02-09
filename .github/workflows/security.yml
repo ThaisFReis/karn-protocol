@@ -28,11 +28,13 @@ jobs:
           key: ${{ runner.os }}-cargo-audit
 
       - name: Install cargo-audit
-        run: cargo install cargo-audit --locked || true
+        run: cargo install cargo-audit --locked
 
       - name: Run security audit
         working-directory: contracts
-        run: cargo audit --deny warnings
+        run: |
+          cargo generate-lockfile
+          cargo audit --deny warnings
 
   rust-outdated:
     name: Check Outdated Dependencies
@@ -211,7 +213,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Install Soroban CLI
-        run: cargo install --locked soroban-cli --features opt || true
+        run: cargo install --locked soroban-cli --features opt --force
 
       - name: Build contracts
         working-directory: contracts

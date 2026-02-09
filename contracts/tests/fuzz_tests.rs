@@ -12,9 +12,6 @@
  * - Random treasury operations
  * - Boundary value exploration
  */
-
-#![cfg(test)]
-
 use soroban_sdk::{
     testutils::{Address as _, Ledger},
     Address, Env, String, Vec,
@@ -22,21 +19,15 @@ use soroban_sdk::{
 
 // Import contracts
 mod valocracy {
-    soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/valocracy.wasm"
-    );
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/valocracy.wasm");
 }
 
 mod governor {
-    soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/governor.wasm"
-    );
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/governor.wasm");
 }
 
 mod treasury {
-    soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/treasury.wasm"
-    );
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/treasury.wasm");
 }
 
 mod token {
@@ -152,9 +143,7 @@ fn fuzz_random_badge_minting() {
     let fuzz = FuzzEnvironment::setup(&env);
 
     // Create 20 members
-    let members: Vec<Address> = (0..20)
-        .map(|_| Address::generate(&env))
-        .collect();
+    let members: Vec<Address> = (0..20).map(|_| Address::generate(&env)).collect();
 
     for member in &members {
         fuzz.register_member(member);
@@ -170,7 +159,8 @@ fn fuzz_random_badge_minting() {
         let is_permanent = fuzz.prng(i * 4, 2) == 1;
 
         // Mint badge
-        fuzz.valocracy.mint(member, &badge_id, &level, &is_permanent);
+        fuzz.valocracy
+            .mint(member, &badge_id, &level, &is_permanent);
 
         // Verify Mana is always valid (>= 5)
         let mana = fuzz.valocracy.get_votes(member);
@@ -236,7 +226,11 @@ fn fuzz_random_time_travel() {
         );
 
         // Invariant: Mana should never be negative
-        assert!(current_mana >= 0, "Negative Mana detected: {}", current_mana);
+        assert!(
+            current_mana >= 0,
+            "Negative Mana detected: {}",
+            current_mana
+        );
 
         previous_mana = current_mana;
     }
@@ -256,9 +250,7 @@ fn fuzz_random_voting_patterns() {
     let fuzz = FuzzEnvironment::setup(&env);
 
     // Create 30 members with random Mana
-    let members: Vec<Address> = (0..30)
-        .map(|_| Address::generate(&env))
-        .collect();
+    let members: Vec<Address> = (0..30).map(|_| Address::generate(&env)).collect();
 
     for (i, member) in members.iter().enumerate() {
         fuzz.register_member(member);
@@ -384,11 +376,7 @@ fn fuzz_random_treasury_operations() {
                 // Random scholarship lab funding
                 let funder = Address::generate(&env);
                 let lab_amount = fuzz.random_level(i * 4);
-                let per_student = if lab_amount > 10 {
-                    lab_amount / 10
-                } else {
-                    1
-                };
+                let per_student = if lab_amount > 10 { lab_amount / 10 } else { 1 };
 
                 // Mint and fund
                 token_admin_client.mint(&funder, &lab_amount);
@@ -479,9 +467,7 @@ fn fuzz_concurrent_operations() {
     let fuzz = FuzzEnvironment::setup(&env);
 
     // Create 50 members
-    let members: Vec<Address> = (0..50)
-        .map(|_| Address::generate(&env))
-        .collect();
+    let members: Vec<Address> = (0..50).map(|_| Address::generate(&env)).collect();
 
     // Register all members
     for member in &members {
@@ -561,13 +547,13 @@ fn fuzz_malformed_inputs() {
 
     // Should handle empty description
     let prop_id = fuzz.governor.propose(&member, &empty_desc, &actions);
-    assert!(prop_id > 0, "Should create proposal even with empty description");
+    assert!(
+        prop_id > 0,
+        "Should create proposal even with empty description"
+    );
 
     // Test 2: Very long description
-    let long_desc = String::from_str(
-        &env,
-        "A".repeat(1000).as_str()
-    );
+    let long_desc = String::from_str(&env, "A".repeat(1000).as_str());
 
     let prop_id2 = fuzz.governor.propose(&member, &long_desc, &actions);
     assert!(prop_id2 > 0, "Should create proposal with long description");
@@ -679,9 +665,7 @@ fn fuzz_numeric_overflow() {
     }
 
     // Test 2: Extreme vote counts
-    let voters: Vec<Address> = (0..10)
-        .map(|_| Address::generate(&env))
-        .collect();
+    let voters: Vec<Address> = (0..10).map(|_| Address::generate(&env)).collect();
 
     for voter in &voters {
         fuzz.register_member(voter);
@@ -701,7 +685,10 @@ fn fuzz_numeric_overflow() {
 
     let proposal = fuzz.governor.get_proposal(&prop_id);
     assert!(proposal.for_votes > 0, "Vote count overflow");
-    assert!(proposal.for_votes < i128::MAX, "Vote count overflow not caught");
+    assert!(
+        proposal.for_votes < i128::MAX,
+        "Vote count overflow not caught"
+    );
 }
 
 /**
@@ -719,9 +706,7 @@ fn fuzz_memory_exhaustion() {
 
     // Create many members
     let member_count = 100;
-    let members: Vec<Address> = (0..member_count)
-        .map(|_| Address::generate(&env))
-        .collect();
+    let members: Vec<Address> = (0..member_count).map(|_| Address::generate(&env)).collect();
 
     // Register all
     for member in &members {

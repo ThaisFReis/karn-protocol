@@ -14,19 +14,17 @@ mod test;
 #[cfg(test)]
 mod test_krn03;
 
-use soroban_sdk::{contract, contractimpl, contracterror, Address, Env, String, Symbol, Vec, IntoVal, BytesN};
+use soroban_sdk::{
+    contract, contracterror, contractimpl, Address, BytesN, Env, IntoVal, String, Symbol, Vec,
+};
 
-use proposal::{Proposal, ProposalState, Action};
+use proposal::{Action, Proposal, ProposalState};
 use storage::{
-    get_valocracy, get_proposal, get_proposal_count,
-    set_valocracy, set_proposal, set_proposal_count, set_vote,
-    has_voted, extend_instance_ttl,
-    is_locked, acquire_lock, release_lock,
-    get_config, set_config,
+    acquire_lock, extend_instance_ttl, get_config, get_proposal, get_proposal_count, get_valocracy,
+    has_voted, is_locked, release_lock, set_config, set_proposal, set_proposal_count,
+    set_valocracy, set_vote,
 };
 use types::GovernanceConfig;
-
-
 
 #[contracterror]
 #[derive(Copy, Clone, Debug, Eq, PartialEq, PartialOrd, Ord)]
@@ -52,20 +50,14 @@ pub struct GovernorContract;
 
 #[contractimpl]
 impl GovernorContract {
-
-
     /// Initialize the Governor contract.
-    pub fn initialize(
-        env: Env,
-        valocracy: Address,
-    ) -> Result<(), GovernorError> {
+    pub fn initialize(env: Env, valocracy: Address) -> Result<(), GovernorError> {
         if get_valocracy(&env).is_some() {
             return Err(GovernorError::AlreadyInitialized);
         }
 
         set_valocracy(&env, &valocracy);
         set_proposal_count(&env, 0);
-        
 
         let config = GovernanceConfig::default(&env);
         set_config(&env, &config);
@@ -74,28 +66,18 @@ impl GovernorContract {
         Ok(())
     }
 
-
-
     /// Update governance configuration (Governor only).
-    pub fn update_config(
-        env: Env,
-        config: GovernanceConfig,
-    ) -> Result<(), GovernorError> {
-        let valocracy = get_valocracy(&env).ok_or(GovernorError::NotInitialized)?;
-        
+    pub fn update_config(env: Env, config: GovernanceConfig) -> Result<(), GovernorError> {
+        let _valocracy = get_valocracy(&env).ok_or(GovernorError::NotInitialized)?;
 
         env.current_contract_address().require_auth();
 
         set_config(&env, &config);
-        
-        env.events().publish(
-            (Symbol::new(&env, "config_update"),),
-            (),
-        );
+
+        env.events()
+            .publish((Symbol::new(&env, "config_update"),), ());
         Ok(())
     }
-
-
 
     /// Create a new proposal. Any member with sufficient voting power can propose.
     pub fn propose(
@@ -106,19 +88,14 @@ impl GovernorContract {
     ) -> Result<u64, GovernorError> {
         proposer.require_auth();
 
-
         if is_locked(&env) {
             return Err(GovernorError::ReentrancyDetected);
         }
 
-
         acquire_lock(&env);
 
-
         let valocracy = get_valocracy(&env).ok_or(GovernorError::NotInitialized)?;
-        
 
-        
         let level: u64 = env.invoke_contract(
             &valocracy,
             &Symbol::new(&env, "level_of"),
@@ -131,14 +108,14 @@ impl GovernorContract {
         }
 
         let config = get_config(&env).ok_or(GovernorError::NotInitialized)?;
-        
+
         // Check proposal threshold (if implemented in Valocracy, or just check generic level/mana logic?)
         // The plan said "Minimum Mana required".
         // We get voting power for the proposer.
         let voting_power = Self::get_voting_power(&env, &valocracy, &proposer);
         if voting_power < config.proposal_threshold {
-             release_lock(&env);
-             return Err(GovernorError::NoVotingPower); // Or a specific error like InsufficientProposalThreshold
+            release_lock(&env);
+            return Err(GovernorError::NoVotingPower); // Or a specific error like InsufficientProposalThreshold
         }
 
         let current_time = env.ledger().timestamp();
@@ -156,7 +133,7 @@ impl GovernorContract {
             id: proposal_id,
             proposer: proposer.clone(),
             description,
-            creation_time: current_time,  // KRN-03 FIX: Snapshot at creation
+            creation_time: current_time, // KRN-03 FIX: Snapshot at creation
             start_time: current_time + config.voting_delay,
             end_time: current_time + config.voting_delay + config.voting_period,
             for_votes: 0,
@@ -187,13 +164,10 @@ impl GovernorContract {
         proposal_id: u64,
         support: bool,
     ) -> Result<u64, GovernorError> {
-
-
-        let mut proposal = get_proposal(&env, proposal_id)
-            .ok_or(GovernorError::ProposalNotFound)?;
+        let mut proposal =
+            get_proposal(&env, proposal_id).ok_or(GovernorError::ProposalNotFound)?;
 
         let current_time = env.ledger().timestamp();
-
 
         if current_time < proposal.start_time {
             return Err(GovernorError::VotingNotStarted);
@@ -202,11 +176,9 @@ impl GovernorContract {
             return Err(GovernorError::VotingEnded);
         }
 
-
         if has_voted(&env, proposal_id, &voter) {
             return Err(GovernorError::AlreadyVoted);
         }
-
 
         if is_locked(&env) {
             return Err(GovernorError::ReentrancyDetected);
@@ -216,7 +188,8 @@ impl GovernorContract {
         // KRN-03 FIX: Get voting power at proposal CREATION time (snapshot)
         // This prevents "buy-in" during voting delay and ensures fair snapshot timing
         let valocracy_addr = get_valocracy(&env).ok_or(GovernorError::NotInitialized)?;
-        let voting_power = Self::get_voting_power_at(&env, &valocracy_addr, &voter, proposal.creation_time);
+        let voting_power =
+            Self::get_voting_power_at(&env, &valocracy_addr, &voter, proposal.creation_time);
 
         if voting_power == 0 {
             release_lock(&env);
@@ -243,8 +216,8 @@ impl GovernorContract {
 
     /// Execute a succeeded proposal
     pub fn execute(env: Env, proposal_id: u64) -> Result<(), GovernorError> {
-        let mut proposal = get_proposal(&env, proposal_id)
-            .ok_or(GovernorError::ProposalNotFound)?;
+        let mut proposal =
+            get_proposal(&env, proposal_id).ok_or(GovernorError::ProposalNotFound)?;
 
         if proposal.executed {
             return Err(GovernorError::ProposalAlreadyExecuted);
@@ -255,16 +228,13 @@ impl GovernorContract {
             return Err(GovernorError::ProposalNotSucceeded);
         }
 
-
         if is_locked(&env) {
             return Err(GovernorError::ReentrancyDetected);
         }
         acquire_lock(&env);
 
-
         proposal.executed = true;
         set_proposal(&env, proposal_id, &proposal);
-
 
         for action in proposal.actions.iter() {
             env.invoke_contract::<soroban_sdk::Val>(
@@ -274,16 +244,12 @@ impl GovernorContract {
             );
         }
 
-        env.events().publish(
-            (Symbol::new(&env, "proposal_executed"), proposal_id),
-            (),
-        );
+        env.events()
+            .publish((Symbol::new(&env, "proposal_executed"), proposal_id), ());
 
         release_lock(&env);
         Ok(())
     }
-
-
 
     /// Get a proposal by ID
     pub fn get_proposal(env: Env, proposal_id: u64) -> Option<Proposal> {
@@ -292,8 +258,7 @@ impl GovernorContract {
 
     /// Get the current state of a proposal
     pub fn get_proposal_state(env: Env, proposal_id: u64) -> Result<ProposalState, GovernorError> {
-        let proposal = get_proposal(&env, proposal_id)
-            .ok_or(GovernorError::ProposalNotFound)?;
+        let proposal = get_proposal(&env, proposal_id).ok_or(GovernorError::ProposalNotFound)?;
 
         let current_time = env.ledger().timestamp();
 
@@ -309,12 +274,10 @@ impl GovernorContract {
             return Ok(ProposalState::Active);
         }
 
-
         let total_votes = proposal.for_votes + proposal.against_votes;
         if total_votes == 0 {
             return Ok(ProposalState::Defeated);
         }
-
 
         let config = get_config(&env).ok_or(GovernorError::NotInitialized)?;
 
@@ -325,7 +288,6 @@ impl GovernorContract {
             // Insufficient participation - proposal fails regardless of approval
             return Ok(ProposalState::Defeated);
         }
-
 
         let for_percentage = (proposal.for_votes * 100) / total_votes;
 
@@ -353,21 +315,17 @@ impl GovernorContract {
 
     /// Upgrade the contract to a new WASM hash (Governor only).
     pub fn upgrade(env: Env, new_wasm_hash: BytesN<32>) -> Result<(), GovernorError> {
-
         env.current_contract_address().require_auth();
-        
-        env.deployer().update_current_contract_wasm(new_wasm_hash.clone());
-        
-        env.events().publish(
-            (Symbol::new(&env, "contract_upgraded"),),
-            new_wasm_hash,
-        );
-        
+
+        env.deployer()
+            .update_current_contract_wasm(new_wasm_hash.clone());
+
+        env.events()
+            .publish((Symbol::new(&env, "contract_upgraded"),), new_wasm_hash);
+
         extend_instance_ttl(&env);
         Ok(())
     }
-
-
 
     /// Get voting power from Valocracy contract (cross-contract call)
     fn get_voting_power(env: &Env, valocracy_addr: &Address, voter: &Address) -> u64 {
@@ -382,7 +340,12 @@ impl GovernorContract {
     ///
     /// KRN-02 FIX: Uses get_votes_at to retrieve historical voting power,
     /// enabling snapshot-based voting at proposal creation time.
-    fn get_voting_power_at(env: &Env, valocracy_addr: &Address, voter: &Address, timestamp: u64) -> u64 {
+    fn get_voting_power_at(
+        env: &Env,
+        valocracy_addr: &Address,
+        voter: &Address,
+        timestamp: u64,
+    ) -> u64 {
         env.invoke_contract::<u64>(
             valocracy_addr,
             &Symbol::new(env, "get_votes_at"),
@@ -390,4 +353,3 @@ impl GovernorContract {
         )
     }
 }
-

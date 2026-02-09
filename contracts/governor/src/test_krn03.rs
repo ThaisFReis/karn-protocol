@@ -8,7 +8,10 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::{Address as _, Ledger}, vec, Address, Env, String, BytesN};
+use soroban_sdk::{
+    testutils::{Address as _, Ledger},
+    vec, Address, BytesN, Env, String,
+};
 
 extern crate valocracy;
 use valocracy::ValocracyContract;
@@ -31,7 +34,12 @@ fn test_krn03_snapshot_timing_vulnerability() {
     governor_client.initialize(&valocracy_id);
 
     // Initialize Valocracy
-    let genesis_members = vec![&env, Address::generate(&env), Address::generate(&env), Address::generate(&env)];
+    let genesis_members = vec![
+        &env,
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+    ];
     let genesis_alice = genesis_members.get(0).unwrap();
     let genesis_bob = genesis_members.get(1).unwrap();
     let treasury = Address::generate(&env);
@@ -103,7 +111,8 @@ fn test_krn03_snapshot_timing_vulnerability() {
 
     // 🚨 KRN-03 VULNERABILITY: Snapshot is taken at proposal.start_time (NOW)
     // NOT at proposal creation time!
-    let snapshot_at_voting_start = valocracy_client.get_votes_at(&genesis_alice, &proposal.start_time);
+    let snapshot_at_voting_start =
+        valocracy_client.get_votes_at(&genesis_alice, &proposal.start_time);
 
     // ❌ VULNERABILITY: Snapshot includes the badge minted DURING the delay
     assert_eq!(snapshot_at_voting_start, 600); // Uses INFLATED Mana!
@@ -144,7 +153,12 @@ fn test_krn03_demonstrates_correct_behavior() {
 
     governor_client.initialize(&valocracy_id);
 
-    let genesis_members = vec![&env, Address::generate(&env), Address::generate(&env), Address::generate(&env)];
+    let genesis_members = vec![
+        &env,
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+    ];
     let genesis_alice = genesis_members.get(0).unwrap();
     let genesis_bob = genesis_members.get(1).unwrap();
     let treasury = Address::generate(&env);

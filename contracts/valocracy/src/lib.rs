@@ -1,23 +1,25 @@
 //! Valocracy - Core IDNFT (Isonomic Degradable NFT) Contract.
 //! Implements soulbound NFTs with decaying voting power (Mana) for governance.
 
+#![allow(clippy::too_many_arguments)]
 #![no_std]
 
 mod errors;
 mod storage;
 mod types;
 
-use soroban_sdk::{contract, contractimpl, Address, Env, String, Symbol, Vec, BytesN, Bytes, IntoVal};
 use soroban_sdk::xdr::ToXdr;
+use soroban_sdk::{
+    contract, contractimpl, Address, Bytes, BytesN, Env, IntoVal, String, Symbol, Vec,
+};
 
 use errors::ValocracyError;
 use storage::{
-    get_governor, get_treasury, get_total_supply, get_user_stats, get_valor,
-    get_token_valor_id, get_token_owner, get_member_valor_id,
-    is_initialized, set_initialized, set_governor, set_treasury,
-    set_total_supply, set_user_stats, set_valor, set_token_valor_id, set_token_owner,
-    set_member_valor_id, remove_token_owner, remove_token_valor_id,
-    extend_instance_ttl, get_signer, set_signer, is_nonce_used, set_nonce_used,
+    extend_instance_ttl, get_governor, get_member_valor_id, get_signer, get_token_owner,
+    get_token_valor_id, get_total_supply, get_treasury, get_user_stats, get_valor, is_initialized,
+    is_nonce_used, remove_token_owner, remove_token_valor_id, set_governor, set_initialized,
+    set_member_valor_id, set_nonce_used, set_signer, set_token_owner, set_token_valor_id,
+    set_total_supply, set_treasury, set_user_stats, set_valor,
 };
 use types::{UserStats, Valor};
 
@@ -29,15 +31,14 @@ pub const VACANCY_PERIOD: u64 = 180 * 24 * 60 * 60;
 /// Inactive members decay to MEMBER_FLOOR.
 pub const MEMBER_FLOOR: u64 = 5;
 
-
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 enum BadgeCategory {
-    Member,      // 0
-    Founder,     // 1
-    Leadership,  // 10-19
-    Track,       // 20-59
-    Community,   // 60-69
-    Governance,  // 70-79
+    Member,     // 0
+    Founder,    // 1
+    Leadership, // 10-19
+    Track,      // 20-59
+    Community,  // 60-69
+    Governance, // 70-79
 }
 
 #[contract]
@@ -45,10 +46,9 @@ pub struct ValocracyContract;
 
 #[contractimpl]
 impl ValocracyContract {
-
-
     /// Initialize the Valocracy contract.
     /// Registers initial valor types and mints genesis badges.
+    #[allow(clippy::too_many_arguments)]
     pub fn initialize(
         env: Env,
         genesis_members: Vec<Address>,
@@ -79,23 +79,30 @@ impl ValocracyContract {
         set_treasury(&env, &treasury);
         set_signer(&env, &signer);
         set_member_valor_id(&env, member_valor_id);
-        env.storage().instance().set(&Symbol::new(&env, "name"), &String::from_str(&env, "Valocracy"));
-        env.storage().instance().set(&Symbol::new(&env, "symbol"), &String::from_str(&env, "VALOR"));
+        env.storage().instance().set(
+            &Symbol::new(&env, "name"),
+            &String::from_str(&env, "Valocracy"),
+        );
+        env.storage().instance().set(
+            &Symbol::new(&env, "symbol"),
+            &String::from_str(&env, "VALOR"),
+        );
         set_total_supply(&env, 0);
-
 
         let count = valor_ids.len();
         for i in 0..count {
             let vid = valor_ids.get(i).unwrap();
             let rar = valor_rarities.get(i).unwrap();
             let meta = valor_metadatas.get(i).unwrap();
-            let valor = Valor { rarity: rar, metadata: meta };
+            let valor = Valor {
+                rarity: rar,
+                metadata: meta,
+            };
             set_valor(&env, vid, &valor);
         }
 
-
-        let leadership_valor = get_valor(&env, leadership_valor_id)
-            .ok_or(ValocracyError::NonExistentValor)?;
+        let leadership_valor =
+            get_valor(&env, leadership_valor_id).ok_or(ValocracyError::NonExistentValor)?;
         let leadership_rarity = leadership_valor.rarity;
 
         let current_time = env.ledger().timestamp();
@@ -106,7 +113,7 @@ impl ValocracyContract {
         for member in genesis_members.iter() {
             let member_stats = UserStats {
                 level: leadership_rarity,
-                permanent_level: 0, 
+                permanent_level: 0,
                 expiry: current_time + VACANCY_PERIOD,
                 verified: false,
             };
@@ -128,15 +135,11 @@ impl ValocracyContract {
 
         extend_instance_ttl(&env);
 
-        env.events().publish(
-            (Symbol::new(&env, "initialized"),),
-            genesis_members.len(),
-        );
+        env.events()
+            .publish((Symbol::new(&env, "initialized"),), genesis_members.len());
 
         Ok(())
     }
-
-
 
     /// Create or update a Valor type (Governor only).
     pub fn set_valor(
@@ -148,7 +151,10 @@ impl ValocracyContract {
         let governor = get_governor(&env).ok_or(ValocracyError::NotInitialized)?;
         governor.require_auth();
 
-        let valor = Valor { rarity, metadata: metadata.clone() };
+        let valor = Valor {
+            rarity,
+            metadata: metadata.clone(),
+        };
         set_valor(&env, valor_id, &valor);
 
         env.events().publish(
@@ -159,7 +165,12 @@ impl ValocracyContract {
     }
 
     /// Mint a new soulbound NFT. Requires authorization from a valid minter.
-    pub fn mint(env: Env, minter: Address, recipient: Address, valor_id: u64) -> Result<u64, ValocracyError> {
+    pub fn mint(
+        env: Env,
+        minter: Address,
+        recipient: Address,
+        valor_id: u64,
+    ) -> Result<u64, ValocracyError> {
         minter.require_auth();
 
         // Check role-based authorization
@@ -195,14 +206,11 @@ impl ValocracyContract {
         }
 
         // Get the designated member valor_id
-        let member_valor_id = get_member_valor_id(&env)
-            .ok_or(ValocracyError::NotInitialized)?;
+        let member_valor_id = get_member_valor_id(&env).ok_or(ValocracyError::NotInitialized)?;
 
         // Execute minting logic
         Self::mint_internal(&env, &caller, member_valor_id)
     }
-
-
 
     /// Mint a new soulbound NFT using backend signature.
     pub fn guardian_mint(
@@ -234,37 +242,24 @@ impl ValocracyContract {
         Self::mint_internal(&env, &account, valor_id)
     }
 
-
-
     /// Revoke a badge token (Governor only).
     pub fn revoke(env: Env, token_id: u64) -> Result<(), ValocracyError> {
         let governor = get_governor(&env).ok_or(ValocracyError::NotInitialized)?;
         governor.require_auth();
 
         // Get token owner
-        let owner = get_token_owner(&env, token_id)
-            .ok_or(ValocracyError::NonExistentToken)?;
+        let owner = get_token_owner(&env, token_id).ok_or(ValocracyError::NonExistentToken)?;
 
         // Get valor rarity
-        let valor_id = get_token_valor_id(&env, token_id)
-            .ok_or(ValocracyError::NonExistentToken)?;
-        let valor = get_valor(&env, valor_id)
-            .ok_or(ValocracyError::NonExistentValor)?;
+        let valor_id =
+            get_token_valor_id(&env, token_id).ok_or(ValocracyError::NonExistentToken)?;
+        let valor = get_valor(&env, valor_id).ok_or(ValocracyError::NonExistentValor)?;
         let rarity = valor.rarity;
 
-
-        let current_stats = get_user_stats(&env, &owner)
-            .ok_or(ValocracyError::NonExistentAccount)?;
-        let new_level = if current_stats.level > rarity {
-            current_stats.level - rarity
-        } else {
-            0
-        };
-        let new_permanent = if current_stats.permanent_level > rarity {
-            current_stats.permanent_level - rarity
-        } else {
-            0
-        };
+        let current_stats =
+            get_user_stats(&env, &owner).ok_or(ValocracyError::NonExistentAccount)?;
+        let new_level = current_stats.level.saturating_sub(rarity);
+        let new_permanent = current_stats.permanent_level.saturating_sub(rarity);
 
         let new_stats = UserStats {
             level: new_level,
@@ -288,14 +283,13 @@ impl ValocracyContract {
         Ok(())
     }
 
-
-
     /// Update the governor contract address (Governor only).
     pub fn update_governor(env: Env, new_governor: Address) -> Result<(), ValocracyError> {
         let governor = get_governor(&env).ok_or(ValocracyError::NotInitialized)?;
         governor.require_auth();
         set_governor(&env, &new_governor);
-        env.events().publish((Symbol::new(&env, "governor_update"),), new_governor);
+        env.events()
+            .publish((Symbol::new(&env, "governor_update"),), new_governor);
         Ok(())
     }
 
@@ -304,7 +298,8 @@ impl ValocracyContract {
         let governor = get_governor(&env).ok_or(ValocracyError::NotInitialized)?;
         governor.require_auth();
         set_treasury(&env, &new_treasury);
-        env.events().publish((Symbol::new(&env, "treasury_update"),), new_treasury);
+        env.events()
+            .publish((Symbol::new(&env, "treasury_update"),), new_treasury);
         Ok(())
     }
 
@@ -312,30 +307,24 @@ impl ValocracyContract {
     pub fn upgrade(env: Env, new_wasm_hash: BytesN<32>) -> Result<(), ValocracyError> {
         let governor = get_governor(&env).ok_or(ValocracyError::NotInitialized)?;
         governor.require_auth();
-        
-        env.deployer().update_current_contract_wasm(new_wasm_hash.clone());
-        
-        env.events().publish(
-            (Symbol::new(&env, "contract_upgraded"),),
-            new_wasm_hash,
-        );
-        
+
+        env.deployer()
+            .update_current_contract_wasm(new_wasm_hash.clone());
+
+        env.events()
+            .publish((Symbol::new(&env, "contract_upgraded"),), new_wasm_hash);
+
         Ok(())
     }
 
     /// Set the verification status of a member (Governor only).
     /// Unverified members cannot withdraw funds from the treasury.
-    pub fn set_verified(
-        env: Env,
-        member: Address,
-        verified: bool,
-    ) -> Result<(), ValocracyError> {
+    pub fn set_verified(env: Env, member: Address, verified: bool) -> Result<(), ValocracyError> {
         let governor = get_governor(&env).ok_or(ValocracyError::NotInitialized)?;
         governor.require_auth();
 
         // Get current stats
-        let mut stats = get_user_stats(&env, &member)
-            .ok_or(ValocracyError::NonExistentAccount)?;
+        let mut stats = get_user_stats(&env, &member).ok_or(ValocracyError::NonExistentAccount)?;
 
         // Update verification status
         stats.verified = verified;
@@ -350,8 +339,6 @@ impl ValocracyContract {
 
         Ok(())
     }
-
-
 
     /// Get the contract name
     pub fn name(env: Env) -> String {
@@ -442,7 +429,12 @@ impl ValocracyContract {
         };
 
         let current_time = env.ledger().timestamp();
-        Self::calculate_mana(stats.level, stats.permanent_level, stats.expiry, current_time)
+        Self::calculate_mana(
+            stats.level,
+            stats.permanent_level,
+            stats.expiry,
+            current_time,
+        )
     }
 
     /// Get voting power (Mana) at a specific timestamp (KRN-02).
@@ -465,7 +457,11 @@ impl ValocracyContract {
         let floor = MEMBER_FLOOR;
         if current_time >= expiry {
             // Return max(permanent, floor)
-            return if permanent_level > floor { permanent_level } else { floor };
+            return if permanent_level > floor {
+                permanent_level
+            } else {
+                floor
+            };
         }
 
         let extra_level = level.saturating_sub(floor);
@@ -473,8 +469,8 @@ impl ValocracyContract {
         let bonus = {
             let time_remaining = expiry - current_time;
             // KRN-04 FIX: Cast to u128 to prevent overflow with large values
-            let result = (u128::from(extra_level) * u128::from(time_remaining))
-                         / u128::from(VACANCY_PERIOD);
+            let result =
+                (u128::from(extra_level) * u128::from(time_remaining)) / u128::from(VACANCY_PERIOD);
             // Safe to cast back since result <= extra_level (division by period)
             result as u64
         };
@@ -493,7 +489,7 @@ impl ValocracyContract {
     ///
     /// Returns false if the account is not registered.
     pub fn is_verified(env: Env, account: Address) -> bool {
-        get_user_stats(&env, &account).map_or(false, |s| s.verified)
+        get_user_stats(&env, &account).is_some_and(|s| s.verified)
     }
 
     /// Get conservative lower bound of total Mana (KRN-03).
@@ -502,8 +498,6 @@ impl ValocracyContract {
         let total_supply = get_total_supply(&env);
         total_supply * MEMBER_FLOOR
     }
-
-
 
     /// Get the category of a badge based on its ID
     fn get_badge_category(valor_id: u64) -> BadgeCategory {
@@ -526,7 +520,7 @@ impl ValocracyContract {
     ) -> Result<(), ValocracyError> {
         let category = Self::get_badge_category(valor_id);
         let governor = get_governor(env).ok_or(ValocracyError::NotInitialized)?;
-        
+
         match category {
             BadgeCategory::Member => {
                 // Can only be minted via self_register
@@ -549,7 +543,7 @@ impl ValocracyContract {
                     let has_leadership = minter_stats
                         .map(|s| s.level >= 10) // Leadership badges have rarity >= 10
                         .unwrap_or(false);
-                    
+
                     if !has_leadership {
                         return Err(ValocracyError::MintNotAuthorized);
                     }
@@ -559,16 +553,15 @@ impl ValocracyContract {
                 // Any member (level > 0)
                 let minter_stats = get_user_stats(env, minter);
                 let is_member = minter_stats.map(|s| s.level > 0).unwrap_or(false);
-                
+
                 if !is_member {
                     return Err(ValocracyError::MintNotAuthorized);
                 }
             }
         }
-        
+
         Ok(())
     }
-
 
     fn validate_badge_id(valor_id: u64) -> Result<(), ValocracyError> {
         // Categories:
@@ -578,24 +571,25 @@ impl ValocracyContract {
         // Track: 20-59
         // Community: 60-69
         // Governance: 70-79
-        
+
         if valor_id <= 1 {
             return Ok(()); // Member (0) or Founder (1)
         }
-        if valor_id >= 10 && valor_id <= 79 {
+        if (10..=79).contains(&valor_id) {
             return Ok(());
         }
-        
+
         // Future proofing: allow higher IDs but maybe restrict them?
-        // For now, let's strictly enforce the spec ranges to prevent 
+        // For now, let's strictly enforce the spec ranges to prevent
         // accidental minting of "test" or "garbage" IDs.
         // If we want to allow arbitrary IDs later, we can remove this or expand it.
         // But SC-001.5 says "Validate that badge_id matches expected categories".
-        
+
         Err(ValocracyError::InvalidValorId)
     }
 
     /// Check that the caller is a member (has level > 0).
+    #[allow(dead_code)]
     fn require_member(env: &Env, caller: &Address) -> Result<(), ValocracyError> {
         if !is_initialized(env) {
             return Err(ValocracyError::NotInitialized);
@@ -618,7 +612,7 @@ impl ValocracyContract {
         expiry: u64,
     ) -> Result<(), ValocracyError> {
         let signer = get_signer(env).ok_or(ValocracyError::NotInitialized)?;
-        
+
         // Check expiry
         if env.ledger().timestamp() > expiry {
             return Err(ValocracyError::SignatureExpired);
@@ -632,7 +626,7 @@ impl ValocracyContract {
 
         // Verify signature
         env.crypto().ed25519_verify(&signer, payload, signature);
-        
+
         Ok(())
     }
 
@@ -644,7 +638,6 @@ impl ValocracyContract {
         let valor = get_valor(env, valor_id).ok_or(ValocracyError::NonExistentValor)?;
         let rarity = valor.rarity;
 
-
         let current_stats = get_user_stats(env, account);
         let current_level = current_stats.as_ref().map_or(0, |s| s.level);
         let current_permanent = current_stats.as_ref().map_or(0, |s| s.permanent_level);
@@ -653,11 +646,11 @@ impl ValocracyContract {
         let current_time = env.ledger().timestamp();
         let new_level = current_level + rarity;
         let new_expiry = current_time + VACANCY_PERIOD;
-        let current_verified = current_stats.as_ref().map_or(false, |s| s.verified);
+        let current_verified = current_stats.as_ref().is_some_and(|s| s.verified);
 
         let new_stats = UserStats {
             level: new_level,
-            permanent_level: current_permanent,  // Preserve existing permanent level
+            permanent_level: current_permanent, // Preserve existing permanent level
             expiry: new_expiry,
             verified: current_verified,
         };
@@ -687,7 +680,7 @@ impl ValocracyContract {
             // "Share issuance policy: I am implementing Shares = Badge Rarity."
             // If it fails, the user gets no shares. That seems bad.
             // Let's propagate error.
-            
+
             // i128::from(rarity) might panic if rarity is too big, but u64 fits in i128 easily.
             let shares = i128::from(rarity);
             if shares > 0 {

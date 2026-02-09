@@ -1,23 +1,41 @@
-#![cfg(test)]
+#![allow(unused_imports)]
+#![allow(unused_variables)]
+#![allow(clippy::all)]
 
 use super::*;
-use soroban_sdk::{testutils::{Address as _, Ledger}, Address, Env, IntoVal, Symbol, BytesN, vec};
-use soroban_sdk::Error as SdkError;
+use soroban_sdk::{
+    testutils::{Address as _, Ledger},
+    vec, Address, BytesN, Env,
+};
 
 // use valocracy::{ValocracyContract, ValocracyContractClient}; // Invalid inside crate logic without alias
 use crate::ValocracyError;
 
 // Helper to mint a specific level and return result
-fn mint_with_result(env: &Env, client: &ValocracyContractClient, minter: &Address, recipient: &Address, valor_id: u64) -> Result<u64, ValocracyError> {
+fn mint_with_result(
+    env: &Env,
+    client: &ValocracyContractClient,
+    minter: &Address,
+    recipient: &Address,
+    valor_id: u64,
+) -> Result<u64, ValocracyError> {
     // try_mint returns Result<Result<u64, ValocracyError>, InvokeError>
     // The outer Result is for host/invoke errors. The inner Result is for contract errors.
     match client.try_mint(minter, recipient, &valor_id) {
         Ok(Ok(val)) => Ok(val),
         Ok(Err(err)) => Err(ValocracyError::try_from(err).unwrap()),
-        Err(_invoke_error) => {
-            // InvokeError means the contract call failed at the host level
-            // For tests, we treat this as an unexpected error
-            panic!("Unexpected host-level error during mint")
+        Err(invoke_error) => {
+            // Soroban `try_*` methods may return contract errors wrapped in the outer `Err`.
+            // Treat `Ok(contract_error)` as a normal contract error; only panic on real host errors.
+            match invoke_error {
+                Ok(contract_err) => Err(contract_err),
+                Err(host_err) => {
+                    if let Ok(contract_err) = ValocracyError::try_from(host_err) {
+                        return Err(contract_err);
+                    }
+                    panic!("Unexpected host-level error during mint: {:?}", host_err)
+                }
+            }
         }
     }
 }
@@ -29,17 +47,25 @@ fn create_full_init_args(env: &Env) -> (u64, Vec<u64>, Vec<u64>, Vec<String>, u6
     // Note: No more "Founder" badge - genesis members get Leadership badges
     let ids = vec![env, 0, 10, 20, 70];
     let rarities = vec![env, 5, 100, 20, 50];
-    let metadatas = vec![env,
+    let metadatas = vec![
+        env,
         String::from_str(env, "Member"),
-        String::from_str(env, "Leadership"),  // Genesis council gets this
+        String::from_str(env, "Leadership"), // Genesis council gets this
         String::from_str(env, "Track"),
-        String::from_str(env, "Governance")
+        String::from_str(env, "Governance"),
     ];
 
-    let leadership_valor_id = 10;  // Genesis members get Leadership badge
+    let leadership_valor_id = 10; // Genesis members get Leadership badge
     let signer = BytesN::from_array(env, &[0; 32]);
 
-    (member_valor_id, ids, rarities, metadatas, leadership_valor_id, signer)
+    (
+        member_valor_id,
+        ids,
+        rarities,
+        metadatas,
+        leadership_valor_id,
+        signer,
+    )
 }
 
 /// Helper to create genesis members vector for tests
@@ -65,11 +91,26 @@ fn test_mint_authorization() {
     let genesis_alice = Address::generate(&env);
     let genesis_bob = Address::generate(&env);
     let genesis_carol = Address::generate(&env);
-    let genesis_members = vec![&env, genesis_alice.clone(), genesis_bob.clone(), genesis_carol.clone()];
+    let genesis_members = vec![
+        &env,
+        genesis_alice.clone(),
+        genesis_bob.clone(),
+        genesis_carol.clone(),
+    ];
 
     let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
 
-    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
+    client.initialize(
+        &genesis_members,
+        &governor,
+        &treasury,
+        &m_id,
+        &ids,
+        &rars,
+        &metas,
+        &leadership_id,
+        &signer,
+    );
 
     let user = Address::generate(&env);
 
@@ -111,7 +152,17 @@ fn test_verification_flow() {
     let genesis_alice = genesis_members.get(0).unwrap();
 
     let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
-    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
+    client.initialize(
+        &genesis_members,
+        &governor,
+        &treasury,
+        &m_id,
+        &ids,
+        &rars,
+        &metas,
+        &leadership_id,
+        &signer,
+    );
 
     // Verify default state - genesis members start unverified
     assert_eq!(client.is_verified(&genesis_alice), false);
@@ -125,31 +176,41 @@ fn test_verification_flow() {
 fn test_upgrade_auth() {
     let env = Env::default();
     env.mock_all_auths();
-    
+
     let contract_id = env.register_contract(None, ValocracyContract);
     let client = ValocracyContractClient::new(&env, &contract_id);
-    
+
     let governor = Address::generate(&env);
     let treasury = Address::generate(&env);
     let genesis_members = create_genesis_members(&env);
     let genesis_alice = genesis_members.get(0).unwrap();
-    
+
     let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
-    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
-    
+    client.initialize(
+        &genesis_members,
+        &governor,
+        &treasury,
+        &m_id,
+        &ids,
+        &rars,
+        &metas,
+        &leadership_id,
+        &signer,
+    );
+
     let new_hash = BytesN::from_array(&env, &[0; 32]);
-    
+
     // In mock_all_auths, the auth check passes.
     // But update_current_contract_wasm will fail with invalid hash.
     // This panic (System Error) confirms we reached the upgrade logic (passed auth).
-    
+
     let res = client.try_upgrade(&new_hash);
     assert!(res.is_err()); // Expect system error (Panic)
-    // If we weren't authorized (and mocked specifically), it would be an error too, 
-    // but here we are confirming that the function is reachable and callable.
-    // A better test would be "fail without auth", which requires granular mocking.
-    // Given we test auth extensively via require_auth presence, this sanity check is acceptable 
-    // to verify the function is exposed and doesn't explode *immediately* before auth.
+                           // If we weren't authorized (and mocked specifically), it would be an error too,
+                           // but here we are confirming that the function is reachable and callable.
+                           // A better test would be "fail without auth", which requires granular mocking.
+                           // Given we test auth extensively via require_auth presence, this sanity check is acceptable
+                           // to verify the function is exposed and doesn't explode *immediately* before auth.
 }
 
 #[test]
@@ -157,21 +218,21 @@ fn test_mana_calculation() {
     let level = 100u64;
     let current_time = 1000000u64;
     let expiry = current_time + VACANCY_PERIOD;
-    
+
     let mana = ValocracyContract::calculate_mana(level, 0, expiry, current_time);
     assert_eq!(mana, level);
-    
+
     // At half time, mana should be half level (plus floor)
     let half_time = current_time + VACANCY_PERIOD / 2;
     let mana_half = ValocracyContract::calculate_mana(level, 0, expiry, half_time);
     // Level 100. Floor 5. Extra 95.
     // Bonus = 95 * 0.5 = 47. Total = 5 + 47 = 52.
     assert_eq!(mana_half, 52);
-    
+
     // At expiry, mana should be floor (5)
     let mana_expired = ValocracyContract::calculate_mana(level, 0, expiry, expiry);
     assert_eq!(mana_expired, 5);
-    
+
     // After expiry, mana should be floor (5)
     let mana_after = ValocracyContract::calculate_mana(level, 0, expiry, expiry + 1000);
     assert_eq!(mana_after, 5);
@@ -182,10 +243,10 @@ fn test_mana_calculation() {
 #[test]
 fn test_mana_calculation_no_overflow() {
     // Test with large values that would overflow u64 without casting
-    let level = 1_000_000_000u64;  // 1 billion
+    let level = 1_000_000_000u64; // 1 billion
     let permanent = 0u64;
     let current_time = 0u64;
-    let expiry = current_time + VACANCY_PERIOD;  // Standard vacancy period
+    let expiry = current_time + VACANCY_PERIOD; // Standard vacancy period
 
     // Should not panic with overflow
     let mana = ValocracyContract::calculate_mana(level, permanent, expiry, current_time);
@@ -204,7 +265,7 @@ fn test_mana_calculation_no_overflow() {
 #[test]
 fn test_mana_calculation_max_values() {
     // Test with very large level to ensure no overflow
-    let level = 10_000_000_000u64;  // 10 billion
+    let level = 10_000_000_000u64; // 10 billion
     let permanent = 0u64;
     let current_time = 1_000_000u64;
     let expiry = current_time + VACANCY_PERIOD;
@@ -232,7 +293,7 @@ fn test_mana_calculation_extreme_time_remaining() {
     let permanent = 0u64;
     let current_time = 1_000_000u64;
     // Set expiry far in the future (but not u64::MAX to avoid other issues)
-    let expiry = current_time + (VACANCY_PERIOD * 1000);  // 1000x normal period
+    let expiry = current_time + (VACANCY_PERIOD * 1000); // 1000x normal period
 
     // Should handle gracefully without overflow
     let mana = ValocracyContract::calculate_mana(level, permanent, expiry, current_time);
@@ -266,11 +327,21 @@ fn test_guardian_mint_requires_recipient_auth() {
     let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
 
     env.mock_all_auths();
-    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
+    client.initialize(
+        &genesis_members,
+        &governor,
+        &treasury,
+        &m_id,
+        &ids,
+        &rars,
+        &metas,
+        &leadership_id,
+        &signer,
+    );
 
     // Create a valid signature for Alice
     let alice = Address::generate(&env);
-    let valor_id = 10u64;  // Leadership badge
+    let valor_id = 10u64; // Leadership badge
     let nonce = 1u64;
     let expiry = env.ledger().timestamp() + 3600;
 
@@ -303,11 +374,21 @@ fn test_guardian_mint_auth_check_passes_with_mock() {
     let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
 
     env.mock_all_auths();
-    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
+    client.initialize(
+        &genesis_members,
+        &governor,
+        &treasury,
+        &m_id,
+        &ids,
+        &rars,
+        &metas,
+        &leadership_id,
+        &signer,
+    );
 
     // Create a valid scenario where Alice authorizes
     let alice = Address::generate(&env);
-    let valor_id = 10u64;  // Leadership badge
+    let valor_id = 10u64; // Leadership badge
     let nonce = 1u64;
     let expiry = env.ledger().timestamp() + 3600;
     let signature = BytesN::from_array(&env, &[0u8; 64]);
@@ -350,7 +431,17 @@ fn test_get_votes_at_historical() {
     let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
 
     let t0 = env.ledger().timestamp();
-    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
+    client.initialize(
+        &genesis_members,
+        &governor,
+        &treasury,
+        &m_id,
+        &ids,
+        &rars,
+        &metas,
+        &leadership_id,
+        &signer,
+    );
 
     // Verify get_votes_at returns same result as get_votes for current time
     let current_mana = client.get_votes(&genesis_alice);
@@ -395,7 +486,17 @@ fn test_genesis_members_badges_decay() {
     let treasury = Address::generate(&env);
 
     let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
-    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
+    client.initialize(
+        &genesis_members,
+        &governor,
+        &treasury,
+        &m_id,
+        &ids,
+        &rars,
+        &metas,
+        &leadership_id,
+        &signer,
+    );
 
     // CRITICAL: Genesis members have NO permanent level - their badges decay!
     let t0 = env.ledger().timestamp();
@@ -409,12 +510,12 @@ fn test_genesis_members_badges_decay() {
     // This proves NO ONE has permanent power - even genesis members!
     let t_future = t0 + 15_552_000;
     let mana_future = client.get_votes_at(&genesis_alice, &t_future);
-    assert_eq!(mana_future, 5);  // Member floor only!
+    assert_eq!(mana_future, 5); // Member floor only!
 
     // 10 years later: Still just member floor
     let t_far_future = t0 + (365 * 10 * 24 * 60 * 60);
     let mana_far = client.get_votes_at(&genesis_alice, &t_far_future);
-    assert_eq!(mana_far, 5);  // No permanent power!
+    assert_eq!(mana_far, 5); // No permanent power!
 }
 
 #[test]
@@ -432,7 +533,17 @@ fn test_get_votes_at_zero_for_unregistered() {
     let random_user = Address::generate(&env);
 
     let (m_id, ids, rars, metas, leadership_id, signer) = create_full_init_args(&env);
-    client.initialize(&genesis_members, &governor, &treasury, &m_id, &ids, &rars, &metas, &leadership_id, &signer);
+    client.initialize(
+        &genesis_members,
+        &governor,
+        &treasury,
+        &m_id,
+        &ids,
+        &rars,
+        &metas,
+        &leadership_id,
+        &signer,
+    );
 
     // Unregistered user should have 0 Mana at any timestamp
     let t0 = env.ledger().timestamp();

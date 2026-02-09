@@ -3,13 +3,8 @@
 //! These tests demonstrate the core Valocracy principle:
 //! **Treasury is managed collectively through governance, not individually.**
 
-#![cfg(test)]
-
 use super::*;
-use soroban_sdk::{
-    testutils::Address as _,
-    token, Address, Env,
-};
+use soroban_sdk::{testutils::Address as _, token, Address, Env};
 
 #[test]
 fn test_direct_withdrawal_blocked() {
@@ -24,7 +19,9 @@ fn test_direct_withdrawal_blocked() {
 
     // Register Stellar asset as token
     let token_admin = Address::generate(&env);
-    let token_id = env.register_stellar_asset_contract_v2(token_admin).address();
+    let token_id = env
+        .register_stellar_asset_contract_v2(token_admin)
+        .address();
 
     // Initialize
     treasury.initialize(&valocracy, &governor, &token_id);
@@ -56,7 +53,9 @@ fn test_governance_controlled_transfer() {
 
     // Register Stellar asset as token
     let token_admin = Address::generate(&env);
-    let token_id = env.register_stellar_asset_contract_v2(token_admin.clone()).address();
+    let token_id = env
+        .register_stellar_asset_contract_v2(token_admin.clone())
+        .address();
     let token_client = token::TokenClient::new(&env, &token_id);
     let token_admin_client = token::StellarAssetClient::new(&env, &token_id);
 
@@ -98,7 +97,9 @@ fn test_non_governor_cannot_transfer() {
 
     // Register Stellar asset as token
     let token_admin = Address::generate(&env);
-    let token_id = env.register_stellar_asset_contract_v2(token_admin.clone()).address();
+    let token_id = env
+        .register_stellar_asset_contract_v2(token_admin.clone())
+        .address();
     let token_client = token::TokenClient::new(&env, &token_id);
     let token_admin_client = token::StellarAssetClient::new(&env, &token_id);
 
@@ -138,7 +139,9 @@ fn test_shares_are_informational_only() {
 
     // Register Stellar asset as token
     let token_admin = Address::generate(&env);
-    let token_id = env.register_stellar_asset_contract_v2(token_admin).address();
+    let token_id = env
+        .register_stellar_asset_contract_v2(token_admin)
+        .address();
 
     // Initialize
     treasury.initialize(&valocracy, &governor, &token_id);
@@ -183,7 +186,9 @@ fn test_valocracy_principle_no_permanent_power() {
 
     // Register Stellar asset as token
     let token_admin = Address::generate(&env);
-    let token_id = env.register_stellar_asset_contract_v2(token_admin.clone()).address();
+    let token_id = env
+        .register_stellar_asset_contract_v2(token_admin.clone())
+        .address();
     let token_client = token::TokenClient::new(&env, &token_id);
     let token_admin_client = token::StellarAssetClient::new(&env, &token_id);
 

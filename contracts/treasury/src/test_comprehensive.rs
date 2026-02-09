@@ -1,5 +1,3 @@
-#![cfg(test)]
-
 //! Comprehensive tests for Treasury contract
 //!
 //! ⚠️ NOTE: Tests for individual `withdraw()` are disabled as of the Valocracy redesign.
@@ -18,22 +16,33 @@
 //! - Edge cases and error handling
 
 use super::*;
-use crate::vault::{MIN_INITIAL_DEPOSIT, VIRTUAL_SHARES, VIRTUAL_ASSETS};
-use soroban_sdk::{
-    testutils::{Address as _, Ledger},
-    token, Address, Env, BytesN,
-};
+use crate::vault::MIN_INITIAL_DEPOSIT;
+use soroban_sdk::{testutils::Address as _, token, Address, BytesN, Env};
 
 // ============ Test Helpers ============
 
-fn create_token_contract<'a>(env: &Env, admin: &Address) -> (Address, token::Client<'a>, token::StellarAssetClient<'a>) {
-    let token_id = env.register_stellar_asset_contract_v2(admin.clone()).address();
+fn create_token_contract<'a>(
+    env: &Env,
+    admin: &Address,
+) -> (Address, token::Client<'a>, token::StellarAssetClient<'a>) {
+    let token_id = env
+        .register_stellar_asset_contract_v2(admin.clone())
+        .address();
     let token_client = token::Client::new(env, &token_id);
     let admin_client = token::StellarAssetClient::new(env, &token_id);
     (token_id, token_client, admin_client)
 }
 
-fn setup_treasury<'a>(env: &Env) -> (TreasuryContractClient<'a>, Address, Address, Address, Address, token::Client<'a>) {
+fn setup_treasury<'a>(
+    env: &Env,
+) -> (
+    TreasuryContractClient<'a>,
+    Address,
+    Address,
+    Address,
+    Address,
+    token::Client<'a>,
+) {
     let contract_id = env.register_contract(None, TreasuryContract);
     let client = TreasuryContractClient::new(env, &contract_id);
 
@@ -45,7 +54,14 @@ fn setup_treasury<'a>(env: &Env) -> (TreasuryContractClient<'a>, Address, Addres
 
     client.initialize(&valocracy, &governor, &token_id);
 
-    (client, contract_id, valocracy, governor, token_id, token_client)
+    (
+        client,
+        contract_id,
+        valocracy,
+        governor,
+        token_id,
+        token_client,
+    )
 }
 
 // ============ Initialization Tests ============
@@ -75,7 +91,10 @@ fn test_double_initialization_fails() {
     // Try to initialize again - should fail
     let result = client.try_initialize(&valocracy, &governor, &token_id);
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().unwrap(), TreasuryError::AlreadyInitialized);
+    assert_eq!(
+        result.unwrap_err().unwrap(),
+        TreasuryError::AlreadyInitialized
+    );
 }
 
 // ============ Deposit Tests ============
@@ -167,8 +186,7 @@ fn test_second_deposit_can_be_small() {
 // ============ Withdrawal Tests ============
 
 #[test]
-    // DEPRECATED: Individual withdrawals disabled in Valocracy model
-    #[ignore]
+#[ignore]
 fn test_withdraw_basic() {
     let env = Env::default();
     env.mock_all_auths();
@@ -194,13 +212,18 @@ fn test_withdraw_basic() {
     assert_eq!(token_client.balance(&user), assets_received);
 
     // Verify: Shares reduced
-    assert_eq!(client.shares_of(&user), MIN_INITIAL_DEPOSIT - shares_to_withdraw);
-    assert_eq!(client.total_shares(), MIN_INITIAL_DEPOSIT - shares_to_withdraw);
+    assert_eq!(
+        client.shares_of(&user),
+        MIN_INITIAL_DEPOSIT - shares_to_withdraw
+    );
+    assert_eq!(
+        client.total_shares(),
+        MIN_INITIAL_DEPOSIT - shares_to_withdraw
+    );
 }
 
-// DEPRECATED: Individual withdrawals disabled in Valocracy model
-#[ignore]
 #[test]
+#[ignore]
 fn test_withdraw_proportional_to_shares() {
     let env = Env::default();
     env.mock_all_auths();
@@ -230,12 +253,9 @@ fn test_withdraw_proportional_to_shares() {
     assert!(assets2 > 4000); // At least 40% of 10k
 }
 
-// DEPRECATED: Individual withdrawals disabled in Valocracy model
-#[ignore]
 #[test]
 fn test_withdraw_more_than_owned_fails() {
     let env = Env::default();
-    #[ignore]
     env.mock_all_auths();
 
     let (client, _, _, _, _, _) = setup_treasury(&env);
@@ -246,16 +266,16 @@ fn test_withdraw_more_than_owned_fails() {
     // Try to withdraw more than owned
     let result = client.try_withdraw(&user, &user, &(MIN_INITIAL_DEPOSIT + 1));
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().unwrap(), TreasuryError::InsufficientShares);
+    assert_eq!(
+        result.unwrap_err().unwrap(),
+        TreasuryError::InsufficientShares
+    );
 }
 
 #[test]
-    // DEPRECATED: Tests individual withdrawal model
-    #[ignore]
+#[ignore]
 fn test_withdraw_zero_fails() {
     let env = Env::default();
-    // DEPRECATED: Individual withdrawals disabled in Valocracy model
-    #[ignore]
     env.mock_all_auths();
 
     let (client, _, _, _, _, _) = setup_treasury(&env);
@@ -271,8 +291,7 @@ fn test_withdraw_zero_fails() {
 // ============ Preview Withdraw Tests ============
 
 #[test]
-    // DEPRECATED: Tests individual withdrawal model
-    #[ignore]
+#[ignore]
 fn test_preview_withdraw_with_virtual_offsets() {
     let env = Env::default();
     env.mock_all_auths();
@@ -281,8 +300,6 @@ fn test_preview_withdraw_with_virtual_offsets() {
     let admin_client = token::StellarAssetClient::new(&env, &token_id);
 
     // Deposit shares
-    // DEPRECATED: preview_withdraw tests individual redemptions
-    #[ignore]
     let user = Address::generate(&env);
     client.deposit(&user, &1000);
 
@@ -348,7 +365,10 @@ fn test_scholarship_escrow_full_lifecycle() {
     client.approve_scholarship(&lab_id, &student);
 
     // Check claimable after approval
-    assert_eq!(client.get_claimable_balance(&student), scholarship_per_member);
+    assert_eq!(
+        client.get_claimable_balance(&student),
+        scholarship_per_member
+    );
 
     // 3. Student withdraws scholarship
     client.withdraw_scholarship(&student, &scholarship_per_member);
@@ -358,7 +378,10 @@ fn test_scholarship_escrow_full_lifecycle() {
     assert_eq!(client.get_claimable_balance(&student), 0);
 
     // Verify treasury balance decreased
-    assert_eq!(token_client.balance(&contract_id), total_amount - scholarship_per_member);
+    assert_eq!(
+        token_client.balance(&contract_id),
+        total_amount - scholarship_per_member
+    );
 }
 
 #[test]
@@ -441,7 +464,10 @@ fn test_withdraw_more_than_claimable_fails() {
     // Try to withdraw more than approved
     let result = client.try_withdraw_scholarship(&student, &2_000);
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().unwrap(), TreasuryError::InsufficientClaimable);
+    assert_eq!(
+        result.unwrap_err().unwrap(),
+        TreasuryError::InsufficientClaimable
+    );
 }
 
 #[test]
@@ -509,7 +535,10 @@ fn test_spend_more_than_balance_fails() {
     let recipient = Address::generate(&env);
     let result = client.try_spend(&recipient, &10_000);
     assert!(result.is_err());
-    assert_eq!(result.unwrap_err().unwrap(), TreasuryError::InsufficientAssets);
+    assert_eq!(
+        result.unwrap_err().unwrap(),
+        TreasuryError::InsufficientAssets
+    );
 }
 
 #[test]
@@ -606,8 +635,7 @@ fn test_claimable_balance_nonexistent_user() {
 // ============ Edge Cases ============
 
 #[test]
-    // DEPRECATED: Tests individual withdrawal model
-    #[ignore]
+#[ignore]
 fn test_withdraw_all_shares_then_deposit_again() {
     let env = Env::default();
     env.mock_all_auths();
@@ -634,8 +662,6 @@ fn test_large_numbers_no_overflow() {
     let env = Env::default();
     env.mock_all_auths();
 
-    // DEPRECATED: Tests individual withdrawal model
-    #[ignore]
     let (client, _, _, _, _, _) = setup_treasury(&env);
 
     let user = Address::generate(&env);
@@ -678,8 +704,7 @@ fn test_multiple_users_shares_isolation() {
 // ============ KRN-01 Security Tests: Scholarship Fund Isolation ============
 
 #[test]
-    // DEPRECATED: Tests individual withdrawal model
-    #[ignore]
+#[ignore]
 fn test_scholarship_funds_isolated_from_shares() {
     let env = Env::default();
     env.mock_all_auths();
@@ -694,8 +719,6 @@ fn test_scholarship_funds_isolated_from_shares() {
 
     // Mint assets backing Alice's shares
     admin_client.mint(&contract_id, &10_000);
-    // DEPRECATED: Tests individual withdrawal model
-    #[ignore]
     assert_eq!(client.total_assets(), 10_000);
 
     // Lab is funded with 50_000 scholarship funds
@@ -772,8 +795,7 @@ fn test_multiple_labs_accounting() {
 }
 
 #[test]
-    // DEPRECATED: Tests individual withdrawal model
-    #[ignore]
+#[ignore]
 fn test_shareholder_withdraws_only_free_assets() {
     let env = Env::default();
     env.mock_all_auths();
@@ -790,8 +812,6 @@ fn test_shareholder_withdraws_only_free_assets() {
     admin_client.mint(&contract_id, &20_000);
     assert_eq!(client.total_assets(), 20_000);
 
-    // DEPRECATED: Tests individual withdrawal model
-    #[ignore]
     // Bob funds lab with 50_000 USDC (restricted)
     let bob = Address::generate(&env);
     admin_client.mint(&bob, &50_000);

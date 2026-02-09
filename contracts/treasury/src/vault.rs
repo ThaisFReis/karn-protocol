@@ -12,6 +12,7 @@ pub const VIRTUAL_SHARES: i128 = 1000;
 pub const VIRTUAL_ASSETS: i128 = 1;
 
 /// Calculate shares from assets. Rounds down favoring the vault. Uses virtual offsets.
+#[allow(dead_code)]
 pub fn convert_to_shares(
     assets: i128,
     total_assets: i128,

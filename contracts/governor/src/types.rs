@@ -14,10 +14,10 @@ pub struct GovernanceConfig {
 impl GovernanceConfig {
     pub fn default(_env: &Env) -> Self {
         Self {
-            voting_delay: 86400, // 1 day
-            voting_period: 604800, // 7 days
-            proposal_threshold: 100, // 100 Mana
-            quorum_percentage: 51, // 51% approval required
+            voting_delay: 86400,        // 1 day
+            voting_period: 604800,      // 7 days
+            proposal_threshold: 100,    // 100 Mana
+            quorum_percentage: 51,      // 51% approval required
             participation_threshold: 4, // 4% participation required (KRN-03)
         }
     }

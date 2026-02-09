@@ -40,42 +40,22 @@ export class AlbedoAdapter implements WalletAdapter {
     name: 'Albedo',
     url: 'https://albedo.link',
     description: 'Web-based Stellar wallet with seamless browser integration',
-    isAvailable: true, // Albedo is always available (web-based)
+    // Albedo is web-based, but availability is environment-dependent.
+    // We treat it as "available" only when the runtime can actually invoke it.
+    isAvailable: false,
   };
 
   private currentAddress: string | null = null;
 
   async isAvailable(): Promise<boolean> {
-    // Albedo is web-based, always available
-    // Load script if not present
-    if (typeof window !== 'undefined' && !window.albedo) {
-      await this.loadAlbedoScript();
-    }
-    return true;
-  }
-
-  private async loadAlbedoScript(): Promise<void> {
-    return new Promise((resolve, reject) => {
-      if (window.albedo) {
-        resolve();
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://cdn.jsdelivr.net/npm/@albedo-link/intent@latest/lib/albedo.intent.js';
-      script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load Albedo'));
-      document.head.appendChild(script);
-    });
+    if (typeof window === 'undefined') return false;
+    return !!window.albedo;
   }
 
   async connect(): Promise<string> {
-    await this.isAvailable();
-
-    if (!window.albedo) {
+    if (!(await this.isAvailable()) || !window.albedo) {
       throw new WalletError(
-        'Albedo failed to load',
+        'Albedo is not available in this environment',
         WalletErrorCode.NOT_INSTALLED,
         WalletType.ALBEDO
       );

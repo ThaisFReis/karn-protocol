@@ -185,7 +185,7 @@ describe('WalletManager', () => {
 
       expect(setItem).toHaveBeenCalledWith(
         'karn_wallet_connection',
-        expect.stringContaining('FREIGHTER')
+        expect.stringContaining('freighter')
       );
     });
 

@@ -7,9 +7,6 @@
  * 3. Valocracy + Treasury: Badge-based scholarship access
  * 4. Full governance flow: Register → Earn badges → Propose → Vote → Execute
  */
-
-#![cfg(test)]
-
 use soroban_sdk::{
     testutils::{Address as _, AuthorizedFunction, AuthorizedInvocation, Ledger},
     Address, Env, String, Vec,
@@ -17,21 +14,15 @@ use soroban_sdk::{
 
 // Import all three contracts
 mod valocracy {
-    soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/valocracy.wasm"
-    );
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/valocracy.wasm");
 }
 
 mod governor {
-    soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/governor.wasm"
-    );
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/governor.wasm");
 }
 
 mod treasury {
-    soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/treasury.wasm"
-    );
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/treasury.wasm");
 }
 
 mod token {
@@ -97,11 +88,11 @@ impl<'a> TestContracts<'a> {
         governor.initialize(
             &valocracy_id,
             &treasury_id,
-            &1,      // voting_delay: 1 second
-            &300,    // voting_period: 5 minutes
-            &2,      // proposal_threshold: 2 Mana
-            &4,      // quorum_percentage: 4%
-            &86400,  // timelock_delay: 1 day
+            &1,     // voting_delay: 1 second
+            &300,   // voting_period: 5 minutes
+            &2,     // proposal_threshold: 2 Mana
+            &4,     // quorum_percentage: 4%
+            &86400, // timelock_delay: 1 day
         );
 
         // Initialize Treasury
@@ -121,8 +112,7 @@ impl<'a> TestContracts<'a> {
     fn register_member(&self, member: &Address) {
         // Create signature (simplified for tests - in production comes from backend)
         let signature = soroban_sdk::Bytes::from_array(
-            self.env,
-            &[0u8; 64], // Mock signature
+            self.env, &[0u8; 64], // Mock signature
         );
 
         self.valocracy.self_register(member, &signature);
@@ -343,9 +333,7 @@ fn test_full_governance_cycle() {
     let contracts = TestContracts::setup(&env);
 
     // Setup: Create 5 members with varying Mana
-    let members: Vec<Address> = (0..5)
-        .map(|_| Address::generate(&env))
-        .collect::<Vec<_>>();
+    let members: Vec<Address> = (0..5).map(|_| Address::generate(&env)).collect::<Vec<_>>();
 
     for (i, member) in members.iter().enumerate() {
         contracts.register_member(member);
@@ -371,7 +359,9 @@ fn test_full_governance_cycle() {
     let description = String::from_str(&env, "Allocate 100k for Q2 scholarships");
     let actions = Vec::new(&env);
 
-    let proposal_id = contracts.governor.propose(&members[0], &description, &actions);
+    let proposal_id = contracts
+        .governor
+        .propose(&members[0], &description, &actions);
 
     // Advance past voting delay
     env.ledger().with_mut(|li| {
@@ -379,15 +369,25 @@ fn test_full_governance_cycle() {
     });
 
     // Members vote (3 for, 2 against)
-    contracts.governor.cast_vote(&members[0], &proposal_id, &true);  // 15 Mana
-    contracts.governor.cast_vote(&members[1], &proposal_id, &true);  // 25 Mana
-    contracts.governor.cast_vote(&members[2], &proposal_id, &true);  // 35 Mana
-    contracts.governor.cast_vote(&members[3], &proposal_id, &false); // 45 Mana
-    contracts.governor.cast_vote(&members[4], &proposal_id, &false); // 55 Mana
+    contracts
+        .governor
+        .cast_vote(&members[0], &proposal_id, &true); // 15 Mana
+    contracts
+        .governor
+        .cast_vote(&members[1], &proposal_id, &true); // 25 Mana
+    contracts
+        .governor
+        .cast_vote(&members[2], &proposal_id, &true); // 35 Mana
+    contracts
+        .governor
+        .cast_vote(&members[3], &proposal_id, &false); // 45 Mana
+    contracts
+        .governor
+        .cast_vote(&members[4], &proposal_id, &false); // 55 Mana
 
     // Verify vote counts
     let proposal = contracts.governor.get_proposal(&proposal_id);
-    assert_eq!(proposal.for_votes, 75);   // 15 + 25 + 35
+    assert_eq!(proposal.for_votes, 75); // 15 + 25 + 35
     assert_eq!(proposal.against_votes, 100); // 45 + 55
 
     // Advance past voting period
@@ -565,9 +565,7 @@ fn test_concurrent_proposals() {
     let contracts = TestContracts::setup(&env);
 
     // Create 3 members
-    let members: Vec<Address> = (0..3)
-        .map(|_| Address::generate(&env))
-        .collect();
+    let members: Vec<Address> = (0..3).map(|_| Address::generate(&env)).collect();
 
     for member in &members {
         contracts.register_member(member);
@@ -576,21 +574,18 @@ fn test_concurrent_proposals() {
 
     // Each member creates a proposal
     let actions = Vec::new(&env);
-    let prop1 = contracts.governor.propose(
-        &members[0],
-        &String::from_str(&env, "Proposal 1"),
-        &actions,
-    );
-    let prop2 = contracts.governor.propose(
-        &members[1],
-        &String::from_str(&env, "Proposal 2"),
-        &actions,
-    );
-    let prop3 = contracts.governor.propose(
-        &members[2],
-        &String::from_str(&env, "Proposal 3"),
-        &actions,
-    );
+    let prop1 =
+        contracts
+            .governor
+            .propose(&members[0], &String::from_str(&env, "Proposal 1"), &actions);
+    let prop2 =
+        contracts
+            .governor
+            .propose(&members[1], &String::from_str(&env, "Proposal 2"), &actions);
+    let prop3 =
+        contracts
+            .governor
+            .propose(&members[2], &String::from_str(&env, "Proposal 3"), &actions);
 
     env.ledger().with_mut(|li| li.timestamp += 2);
 
@@ -610,15 +605,15 @@ fn test_concurrent_proposals() {
 
     // Verify vote counts
     let proposal1 = contracts.governor.get_proposal(&prop1);
-    assert_eq!(proposal1.for_votes, 110);    // members[0] + members[2]
+    assert_eq!(proposal1.for_votes, 110); // members[0] + members[2]
     assert_eq!(proposal1.against_votes, 55); // members[1]
 
     let proposal2 = contracts.governor.get_proposal(&prop2);
-    assert_eq!(proposal2.for_votes, 110);    // members[0] + members[2]
+    assert_eq!(proposal2.for_votes, 110); // members[0] + members[2]
     assert_eq!(proposal2.against_votes, 0);
 
     let proposal3 = contracts.governor.get_proposal(&prop3);
-    assert_eq!(proposal3.for_votes, 110);    // members[1] + members[2]
+    assert_eq!(proposal3.for_votes, 110); // members[1] + members[2]
     assert_eq!(proposal3.against_votes, 0);
 }
 
@@ -653,13 +648,17 @@ fn test_governance_scholarship_approval() {
 
     // Fund treasury and create lab
     contracts.fund_treasury(&contracts.admin, 100_000);
-    let lab_id = contracts.treasury.fund_lab(&contracts.admin, &10_000, &1_000);
+    let lab_id = contracts
+        .treasury
+        .fund_lab(&contracts.admin, &10_000, &1_000);
 
     // Create proposal to approve student for scholarship
     let description = String::from_str(&env, "Approve scholarship for student");
     let actions = Vec::new(&env);
 
-    let prop_id = contracts.governor.propose(&guardian, &description, &actions);
+    let prop_id = contracts
+        .governor
+        .propose(&guardian, &description, &actions);
 
     env.ledger().with_mut(|li| li.timestamp += 2);
 

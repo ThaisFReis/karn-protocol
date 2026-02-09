@@ -6,18 +6,35 @@
 mod storage;
 mod vault;
 
-use soroban_sdk::{contract, contractimpl, contracterror, token, Address, Env, Symbol, BytesN};
+use soroban_sdk::{contract, contracterror, contractimpl, token, Address, BytesN, Env, Symbol};
 
 use storage::{
-    get_valocracy, get_governor, get_asset_token, get_total_shares, get_user_shares,
-    set_valocracy, set_governor, set_asset_token, set_total_shares, set_user_shares,
+    acquire_lock,
     extend_instance_ttl,
-    is_locked, acquire_lock, release_lock,
-    // KRN-01: Restricted reserves (scholarship funds)
-    get_restricted_reserves, set_restricted_reserves,
+    get_asset_token,
+    get_claimable,
+    get_governor,
     // Lab Escrow
-    get_lab, set_lab, get_lab_counter, set_lab_counter, get_claimable, set_claimable,
-    Lab, LabStatus,
+    get_lab,
+    get_lab_counter,
+    // KRN-01: Restricted reserves (scholarship funds)
+    get_restricted_reserves,
+    get_total_shares,
+    get_user_shares,
+    get_valocracy,
+    is_locked,
+    release_lock,
+    set_asset_token,
+    set_claimable,
+    set_governor,
+    set_lab,
+    set_lab_counter,
+    set_restricted_reserves,
+    set_total_shares,
+    set_user_shares,
+    set_valocracy,
+    Lab,
+    LabStatus,
 };
 
 #[contracterror]
@@ -42,8 +59,6 @@ pub struct TreasuryContract;
 
 #[contractimpl]
 impl TreasuryContract {
-
-
     /// Initialize the Treasury contract.
     pub fn initialize(
         env: Env,
@@ -64,19 +79,16 @@ impl TreasuryContract {
         Ok(())
     }
 
-
-
     /// Update the governor contract address (migration path).
     /// Only callable by the current governor.
     pub fn update_governor(env: Env, new_governor: Address) -> Result<(), TreasuryError> {
         let governor = get_governor(&env).ok_or(TreasuryError::NotInitialized)?;
         governor.require_auth();
         set_governor(&env, &new_governor);
-        env.events().publish((Symbol::new(&env, "governor_update"),), new_governor);
+        env.events()
+            .publish((Symbol::new(&env, "governor_update"),), new_governor);
         Ok(())
     }
-
-
 
     /// Allocate shares — called by Valocracy when badges are minted.
     /// Shares track contribution-based allocation but cannot be individually redeemed.
@@ -95,27 +107,25 @@ impl TreasuryContract {
 
         // Update user shares
         let current_shares = get_user_shares(&env, &receiver);
-        let new_user_shares = current_shares.checked_add(shares)
+        let new_user_shares = current_shares
+            .checked_add(shares)
             .ok_or(TreasuryError::MathOverflow)?;
         set_user_shares(&env, &receiver, new_user_shares);
 
         // Update total shares
         let total = get_total_shares(&env);
-        let new_total = total.checked_add(shares)
+        let new_total = total
+            .checked_add(shares)
             .ok_or(TreasuryError::MathOverflow)?;
         set_total_shares(&env, new_total);
 
         extend_instance_ttl(&env);
 
-        env.events().publish(
-            (Symbol::new(&env, "deposit"), receiver),
-            shares,
-        );
+        env.events()
+            .publish((Symbol::new(&env, "deposit"), receiver), shares);
 
         Ok(())
     }
-
-
 
     /// Withdraw is deprecated. All withdrawals must be approved through governance via `transfer()`.
     pub fn withdraw(
@@ -128,8 +138,6 @@ impl TreasuryContract {
         // All withdrawals require governance approval
         Err(TreasuryError::NotAuthorized)
     }
-
-
 
     /// Get the underlying asset token address
     pub fn asset(env: Env) -> Option<Address> {
@@ -186,15 +194,9 @@ impl TreasuryContract {
         get_governor(&env)
     }
 
-
-
     /// Transfer assets (only callable by Governor).
     /// Enforces collective decision-making instead of individual redemptions.
-    pub fn transfer(
-        env: Env,
-        receiver: Address,
-        amount: i128,
-    ) -> Result<(), TreasuryError> {
+    pub fn transfer(env: Env, receiver: Address, amount: i128) -> Result<(), TreasuryError> {
         let governor = get_governor(&env).ok_or(TreasuryError::NotInitialized)?;
         governor.require_auth();
 
@@ -220,25 +222,17 @@ impl TreasuryContract {
 
         extend_instance_ttl(&env);
 
-        env.events().publish(
-            (Symbol::new(&env, "transfer"), receiver),
-            amount,
-        );
+        env.events()
+            .publish((Symbol::new(&env, "transfer"), receiver), amount);
 
         release_lock(&env);
         Ok(())
     }
 
     /// Legacy alias for transfer().
-    pub fn spend(
-        env: Env,
-        receiver: Address,
-        amount: i128,
-    ) -> Result<(), TreasuryError> {
+    pub fn spend(env: Env, receiver: Address, amount: i128) -> Result<(), TreasuryError> {
         Self::transfer(env, receiver, amount)
     }
-
-
 
     /// Fund a new Lab (Scholarship)
     ///
@@ -322,7 +316,11 @@ impl TreasuryContract {
         extend_instance_ttl(&env);
 
         env.events().publish(
-            (Symbol::new(&env, "scholarship_released"), lab_id, member.clone()),
+            (
+                Symbol::new(&env, "scholarship_released"),
+                lab_id,
+                member.clone(),
+            ),
             scholarship_amount,
         );
 
@@ -372,10 +370,8 @@ impl TreasuryContract {
 
         extend_instance_ttl(&env);
 
-        env.events().publish(
-            (Symbol::new(&env, "scholarship_withdrawn"), member),
-            amount,
-        );
+        env.events()
+            .publish((Symbol::new(&env, "scholarship_withdrawn"), member), amount);
 
         Ok(())
     }
@@ -385,14 +381,13 @@ impl TreasuryContract {
     pub fn upgrade(env: Env, new_wasm_hash: BytesN<32>) -> Result<(), TreasuryError> {
         let governor = get_governor(&env).ok_or(TreasuryError::NotInitialized)?;
         governor.require_auth();
-        
-        env.deployer().update_current_contract_wasm(new_wasm_hash.clone());
-        
-        env.events().publish(
-            (Symbol::new(&env, "contract_upgraded"),),
-            new_wasm_hash,
-        );
-        
+
+        env.deployer()
+            .update_current_contract_wasm(new_wasm_hash.clone());
+
+        env.events()
+            .publish((Symbol::new(&env, "contract_upgraded"),), new_wasm_hash);
+
         extend_instance_ttl(&env);
         Ok(())
     }

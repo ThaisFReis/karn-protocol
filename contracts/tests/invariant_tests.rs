@@ -12,9 +12,6 @@
  * These tests use property-based testing techniques to verify
  * invariants across many different execution paths.
  */
-
-#![cfg(test)]
-
 use soroban_sdk::{
     testutils::{Address as _, Ledger},
     Address, Env, String, Vec,
@@ -22,21 +19,15 @@ use soroban_sdk::{
 
 // Import contracts
 mod valocracy {
-    soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/valocracy.wasm"
-    );
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/valocracy.wasm");
 }
 
 mod governor {
-    soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/governor.wasm"
-    );
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/governor.wasm");
 }
 
 mod treasury {
-    soroban_sdk::contractimport!(
-        file = "../target/wasm32-unknown-unknown/release/treasury.wasm"
-    );
+    soroban_sdk::contractimport!(file = "../target/wasm32-unknown-unknown/release/treasury.wasm");
 }
 
 mod token {
@@ -301,10 +292,7 @@ fn invariant_vote_conservation() {
     let proposal = inv.governor.get_proposal(&prop_id);
 
     // INVARIANT: Recorded votes = Expected votes
-    assert_eq!(
-        proposal.for_votes, expected_for,
-        "For votes not conserved"
-    );
+    assert_eq!(proposal.for_votes, expected_for, "For votes not conserved");
     assert_eq!(
         proposal.against_votes, expected_against,
         "Against votes not conserved"
@@ -384,7 +372,8 @@ fn invariant_proposal_state_valid_transitions() {
         assert_eq!(executed_state, governor::ProposalState::Executed);
 
         // INVARIANT: Once executed, state never changes
-        env.ledger().with_mut(|li| li.timestamp += 365 * 24 * 60 * 60);
+        env.ledger()
+            .with_mut(|li| li.timestamp += 365 * 24 * 60 * 60);
         let final_state = inv.governor.state(&prop_id);
         assert_eq!(
             final_state,
@@ -426,10 +415,7 @@ fn invariant_treasury_balance_consistency() {
 
     // INVARIANT: Balance = Deposits
     let balance1 = inv.treasury.total_assets();
-    assert_eq!(
-        balance1, total_deposited,
-        "Balance mismatch after deposit"
-    );
+    assert_eq!(balance1, total_deposited, "Balance mismatch after deposit");
 
     // Deposit 2
     let depositor2 = Address::generate(&env);
@@ -472,10 +458,7 @@ fn invariant_treasury_balance_consistency() {
     // INVARIANT: Balance accounts for scholarships
     let balance4 = inv.treasury.total_assets();
     let expected = total_deposited - total_withdrawn + lab_amount - total_scholarships;
-    assert_eq!(
-        balance4, expected,
-        "Balance mismatch after scholarship"
-    );
+    assert_eq!(balance4, expected, "Balance mismatch after scholarship");
 }
 
 /**
@@ -560,7 +543,8 @@ fn invariant_level_non_decreasing() {
     // Mint badges and verify level only increases
     for i in 1..=20 {
         let badge_level = i * 10;
-        inv.valocracy.mint(&member, &(i as u32), &badge_level, &false);
+        inv.valocracy
+            .mint(&member, &(i as u32), &badge_level, &false);
 
         let current_level = inv.valocracy.level_of(&member);
 
@@ -726,7 +710,8 @@ fn invariant_scholarship_balance_accuracy() {
 
     // Withdraw half
     let withdraw_amount = per_student / 2;
-    inv.treasury.withdraw_scholarship(&student, &withdraw_amount);
+    inv.treasury
+        .withdraw_scholarship(&student, &withdraw_amount);
 
     // INVARIANT: Claimable balance = approved - withdrawn
     let remaining_balance = inv.treasury.get_claimable_balance(&student);
@@ -737,7 +722,8 @@ fn invariant_scholarship_balance_accuracy() {
     );
 
     // Withdraw rest
-    inv.treasury.withdraw_scholarship(&student, &remaining_balance);
+    inv.treasury
+        .withdraw_scholarship(&student, &remaining_balance);
 
     // INVARIANT: Final claimable balance = 0
     let final_balance = inv.treasury.get_claimable_balance(&student);

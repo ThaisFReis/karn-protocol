@@ -1,7 +1,10 @@
 #![cfg(test)]
 
 use super::*;
-use soroban_sdk::{testutils::{Address as _, Ledger, MockAuth, MockAuthInvoke}, vec, Address, Env, IntoVal, Symbol, BytesN};
+use soroban_sdk::{
+    testutils::{Address as _, Ledger, MockAuth, MockAuthInvoke},
+    vec, Address, BytesN, Env, IntoVal, Symbol,
+};
 
 extern crate valocracy;
 use valocracy::ValocracyContract;
@@ -54,17 +57,17 @@ fn test_settings_update() {
 fn test_upgrade_access() {
     let env = Env::default();
     env.mock_all_auths();
-    
+
     let governor_id = env.register_contract(None, GovernorContract);
     let client = GovernorContractClient::new(&env, &governor_id);
     let valocracy_id = env.register_contract(None, ValocracyContract);
     client.initialize(&valocracy_id);
-    
+
     let new_wasm_hash = BytesN::from_array(&env, &[0; 32]);
-    
+
     // Reset auths to test failure
     env.mock_auths(&[]);
-    
+
     // Call upgrade without auth -> Fail
     let res = client.try_upgrade(&new_wasm_hash);
     assert!(res.is_err());
@@ -88,7 +91,12 @@ fn test_voting_power_snapshot() {
     governor_client.initialize(&valocracy_id);
 
     // Initialize Valocracy
-    let genesis_members = vec![&env, Address::generate(&env), Address::generate(&env), Address::generate(&env)];
+    let genesis_members = vec![
+        &env,
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+    ];
     let genesis_alice = genesis_members.get(0).unwrap();
     let treasury = Address::generate(&env);
 
@@ -100,7 +108,7 @@ fn test_voting_power_snapshot() {
         String::from_str(&env, "Member"),
         String::from_str(&env, "Leadership"),
     ];
-    let leadership_valor_id = 10u64;  // Leadership badge for genesis members
+    let leadership_valor_id = 10u64; // Leadership badge for genesis members
     let signer = BytesN::from_array(&env, &[0; 32]);
 
     valocracy_client.initialize(
@@ -122,11 +130,7 @@ fn test_voting_power_snapshot() {
     // Create proposal
     let proposal_id = 1u64;
     let actions = vec![&env]; // Empty actions for test
-    governor_client.propose(
-        &voter,
-        &String::from_str(&env, "Test Proposal"),
-        &actions,
-    );
+    governor_client.propose(&voter, &String::from_str(&env, "Test Proposal"), &actions);
 
     // Get proposal to find snapshot time
     let proposal = governor_client.get_proposal(&proposal_id).unwrap();
@@ -165,7 +169,12 @@ fn test_flash_voting_prevented() {
     governor_client.initialize(&valocracy_id);
 
     // Initialize Valocracy
-    let genesis_members = vec![&env, Address::generate(&env), Address::generate(&env), Address::generate(&env)];
+    let genesis_members = vec![
+        &env,
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+    ];
     let genesis_alice = genesis_members.get(0).unwrap();
     let treasury = Address::generate(&env);
 
@@ -178,7 +187,7 @@ fn test_flash_voting_prevented() {
         String::from_str(&env, "Leadership"),
         String::from_str(&env, "Governance"),
     ];
-    let leadership_valor_id = 10u64;  // Leadership badge for genesis members
+    let leadership_valor_id = 10u64; // Leadership badge for genesis members
     let signer = BytesN::from_array(&env, &[0; 32]);
 
     valocracy_client.initialize(
@@ -238,7 +247,12 @@ fn test_consistent_voting_power_across_voters() {
     governor_client.initialize(&valocracy_id);
 
     // Initialize Valocracy
-    let genesis_members = vec![&env, Address::generate(&env), Address::generate(&env), Address::generate(&env)];
+    let genesis_members = vec![
+        &env,
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+    ];
     let genesis_alice = genesis_members.get(0).unwrap();
     let treasury = Address::generate(&env);
 
@@ -250,7 +264,7 @@ fn test_consistent_voting_power_across_voters() {
         String::from_str(&env, "Member"),
         String::from_str(&env, "Leadership"),
     ];
-    let leadership_valor_id = 10u64;  // Leadership badge for genesis members
+    let leadership_valor_id = 10u64; // Leadership badge for genesis members
     let signer = BytesN::from_array(&env, &[0; 32]);
 
     valocracy_client.initialize(
@@ -308,7 +322,12 @@ fn test_single_vote_cannot_pass() {
     governor_client.initialize(&valocracy_id);
 
     // Initialize Valocracy with founder
-    let genesis_members = vec![&env, Address::generate(&env), Address::generate(&env), Address::generate(&env)];
+    let genesis_members = vec![
+        &env,
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+    ];
     let genesis_alice = genesis_members.get(0).unwrap();
     let treasury = Address::generate(&env);
 
@@ -320,7 +339,7 @@ fn test_single_vote_cannot_pass() {
         String::from_str(&env, "Member"),
         String::from_str(&env, "Leadership"),
     ];
-    let leadership_valor_id = 10u64;  // Leadership badge for genesis members
+    let leadership_valor_id = 10u64; // Leadership badge for genesis members
     let signer = BytesN::from_array(&env, &[0; 32]);
 
     valocracy_client.initialize(
@@ -391,7 +410,12 @@ fn test_low_participation_defeats_proposal() {
     governor_client.initialize(&valocracy_id);
 
     // Initialize Valocracy
-    let genesis_members = vec![&env, Address::generate(&env), Address::generate(&env), Address::generate(&env)];
+    let genesis_members = vec![
+        &env,
+        Address::generate(&env),
+        Address::generate(&env),
+        Address::generate(&env),
+    ];
     let genesis_alice = genesis_members.get(0).unwrap();
     let treasury = Address::generate(&env);
 
@@ -403,7 +427,7 @@ fn test_low_participation_defeats_proposal() {
         String::from_str(&env, "Member"),
         String::from_str(&env, "Leadership"),
     ];
-    let leadership_valor_id = 10u64;  // Leadership badge for genesis members
+    let leadership_valor_id = 10u64; // Leadership badge for genesis members
     let signer = BytesN::from_array(&env, &[0; 32]);
 
     valocracy_client.initialize(

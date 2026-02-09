@@ -315,7 +315,10 @@ export class WalletManager {
     if (typeof window === 'undefined') return;
 
     try {
-      localStorage.setItem(
+      const storage = (window as any).localStorage;
+      if (!storage) return;
+
+      storage.setItem(
         'karn_wallet_connection',
         JSON.stringify({ walletType, address })
       );
@@ -331,7 +334,10 @@ export class WalletManager {
     if (typeof window === 'undefined') return;
 
     try {
-      localStorage.removeItem('karn_wallet_connection');
+      const storage = (window as any).localStorage;
+      if (!storage) return;
+
+      storage.removeItem('karn_wallet_connection');
     } catch (error) {
       console.warn('Failed to clear wallet connection:', error);
     }
@@ -344,7 +350,10 @@ export class WalletManager {
     if (typeof window === 'undefined') return;
 
     try {
-      const saved = localStorage.getItem('karn_wallet_connection');
+      const storage = (window as any).localStorage;
+      if (!storage) return;
+
+      const saved = storage.getItem('karn_wallet_connection');
       if (!saved) return;
 
       const { walletType } = JSON.parse(saved);

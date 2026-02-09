@@ -46,8 +46,8 @@ EXCLUDE_DIRS=(
   '--exclude-dir=dist'
   '--exclude-dir=.next'
   '--exclude-dir=coverage'
-  '--exclude-dir=contracts/**/test_snapshots'
-  '--exclude-dir=contracts/tests/test_snapshots'
+  # Contains deterministic/synthetic addresses used by Soroban tests.
+  '--exclude-dir=test_snapshots'
 )
 
 # Notes:

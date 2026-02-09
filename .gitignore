@@ -12,3 +12,7 @@ build/
 
 # Soroban
 .soroban/
+
+# Local AI tooling (must never be committed)
+.claude/
+.claude/*.local.json

@@ -11,7 +11,7 @@
 
 **Do not open a public issue for security vulnerabilities.**
 
-If you discover a security vulnerability within this project, please send an e-mail to **security@karn.org**. All security vulnerability reports will be promptly addressed.
+If you discover a security vulnerability within this project, please send an e-mail to **security@karn.lat**. All security vulnerability reports will be promptly addressed.
 
 We handle vulnerabilities with the following process:
 

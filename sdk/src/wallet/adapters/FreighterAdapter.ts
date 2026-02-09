@@ -14,23 +14,16 @@ import {
   WalletErrorCode,
 } from '../types.js';
 
-// Freighter API types (from @stellar/freighter-api)
-interface FreighterAPI {
-  isConnected(): Promise<boolean>;
-  getPublicKey(): Promise<string>;
-  signTransaction(
+type FreighterModule = {
+  isConnected?: () => Promise<boolean>;
+  getPublicKey?: () => Promise<string>;
+  signTransaction?: (
     xdr: string,
     opts?: { network?: string; networkPassphrase?: string; accountToSign?: string }
-  ): Promise<string>;
-  getNetwork(): Promise<string>;
-  getNetworkDetails(): Promise<{ network: string; networkPassphrase: string }>;
-}
-
-declare global {
-  interface Window {
-    freighter?: FreighterAPI;
-  }
-}
+  ) => Promise<string>;
+  getNetwork?: () => Promise<string>;
+  getNetworkDetails?: () => Promise<{ network: string; networkPassphrase: string }>;
+};
 
 export class FreighterAdapter implements WalletAdapter {
   type = WalletType.FREIGHTER;
@@ -45,34 +38,65 @@ export class FreighterAdapter implements WalletAdapter {
     isAvailable: false,
   };
 
-  private api: FreighterAPI | null = null;
+  private freighter: FreighterModule | null = null;
 
-  constructor() {
-    this.init();
+  private canUseBrowserFreighterApi(): boolean {
+    // In Node/Jest we may have `global.window` mocked but without real browser globals.
+    // `@stellar/freighter-api` touches `window.location.origin` at import time.
+    return (
+      typeof window !== 'undefined' &&
+      typeof (window as any).location?.origin === 'string' &&
+      typeof document !== 'undefined'
+    );
   }
 
-  private init() {
-    if (typeof window !== 'undefined' && window.freighter) {
-      this.api = window.freighter;
-      this.metadata.isAvailable = true;
+  private async loadFreighter(): Promise<FreighterModule> {
+    if (this.freighter) return this.freighter;
+
+    // 1) Prefer legacy window injection if present (also used by our Jest tests).
+    if (typeof window !== 'undefined') {
+      const injected = (window as any).freighter as FreighterModule | undefined;
+      if (injected) {
+        this.freighter = injected;
+        return injected;
+      }
+    }
+
+    // 2) In real browsers, use the official module API.
+    if (!this.canUseBrowserFreighterApi()) {
+      throw new WalletError('Freighter is not installed', WalletErrorCode.NOT_INSTALLED, WalletType.FREIGHTER);
+    }
+
+    try {
+      const mod = (await import('@stellar/freighter-api')) as unknown as FreighterModule;
+      this.freighter = mod;
+      return mod;
+    } catch {
+      throw new WalletError('Freighter is not installed', WalletErrorCode.NOT_INSTALLED, WalletType.FREIGHTER);
     }
   }
 
   async isAvailable(): Promise<boolean> {
-    return this.metadata.isAvailable;
+    try {
+      const freighter = await this.loadFreighter();
+      if (typeof freighter.isConnected !== 'function') return false;
+      await freighter.isConnected();
+      this.metadata.isAvailable = true;
+      return true;
+    } catch {
+      this.metadata.isAvailable = false;
+      return false;
+    }
   }
 
   async connect(): Promise<string> {
-    if (!this.api) {
-      throw new WalletError(
-        'Freighter is not installed. Please install from https://freighter.app',
-        WalletErrorCode.NOT_INSTALLED,
-        WalletType.FREIGHTER
-      );
+    const freighter = await this.loadFreighter();
+    if (typeof freighter.getPublicKey !== 'function') {
+      throw new WalletError('Freighter API is unavailable', WalletErrorCode.NOT_INSTALLED, WalletType.FREIGHTER);
     }
 
     try {
-      const publicKey = await this.api.getPublicKey();
+      const publicKey = await freighter.getPublicKey();
       if (!publicKey) {
         throw new WalletError(
           'User rejected connection request',
@@ -95,27 +119,29 @@ export class FreighterAdapter implements WalletAdapter {
   async disconnect(): Promise<void> {
     // Freighter doesn't have explicit disconnect
     // Connection state is managed by extension
-    this.api = null;
+    // Keep module cached, just mark unavailable until next check.
+    this.metadata.isAvailable = false;
   }
 
   async getAddress(): Promise<string | null> {
-    if (!this.api) return null;
-
     try {
-      const connected = await this.api.isConnected();
+      const freighter = await this.loadFreighter();
+      if (typeof freighter.isConnected !== 'function' || typeof freighter.getPublicKey !== 'function') return null;
+
+      const connected = await freighter.isConnected();
       if (!connected) return null;
 
-      return await this.api.getPublicKey();
+      return await freighter.getPublicKey();
     } catch {
       return null;
     }
   }
 
   async isConnected(): Promise<boolean> {
-    if (!this.api) return false;
-
     try {
-      return await this.api.isConnected();
+      const freighter = await this.loadFreighter();
+      if (typeof freighter.isConnected !== 'function') return false;
+      return await freighter.isConnected();
     } catch {
       return false;
     }
@@ -125,16 +151,13 @@ export class FreighterAdapter implements WalletAdapter {
     xdr: string,
     options?: SignTransactionOptions
   ): Promise<string> {
-    if (!this.api) {
-      throw new WalletError(
-        'Freighter is not connected',
-        WalletErrorCode.NOT_CONNECTED,
-        WalletType.FREIGHTER
-      );
+    const freighter = await this.loadFreighter();
+    if (typeof freighter.signTransaction !== 'function') {
+      throw new WalletError('Freighter is not connected', WalletErrorCode.NOT_CONNECTED, WalletType.FREIGHTER);
     }
 
     try {
-      const signedXdr = await this.api.signTransaction(xdr, {
+      const signedXdr = await freighter.signTransaction(xdr, {
         networkPassphrase: options?.networkPassphrase,
         accountToSign: options?.accountToSign,
       });
@@ -158,16 +181,13 @@ export class FreighterAdapter implements WalletAdapter {
   }
 
   async getNetwork(): Promise<string> {
-    if (!this.api) {
-      throw new WalletError(
-        'Freighter is not connected',
-        WalletErrorCode.NOT_CONNECTED,
-        WalletType.FREIGHTER
-      );
+    const freighter = await this.loadFreighter();
+    if (typeof freighter.getNetwork !== 'function') {
+      throw new WalletError('Freighter is not connected', WalletErrorCode.NOT_CONNECTED, WalletType.FREIGHTER);
     }
 
     try {
-      return await this.api.getNetwork();
+      return await freighter.getNetwork();
     } catch (error: any) {
       throw new WalletError(
         `Failed to get network: ${error.message}`,

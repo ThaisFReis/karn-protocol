@@ -2,15 +2,29 @@
 
 Documentation for the `@karn_lat/protocol-sdk` TypeScript library.
 
-## Installation
+## Start Here
+
+- [SDK README](../../sdk/README.md)
+- [Wallet Connection Guide](./WALLET_CONNECT_GUIDE.md)
+- [SDK Test Coverage & Examples](./SDK_TESTS_IMPLEMENTATION.md)
+
+## Install
 
 ```bash
 npm install @karn_lat/protocol-sdk
 ```
 
-## Usage
+## Quick Usage
 
-```typescript
-import { KarnSDK } from '@karn_lat/protocol-sdk';
-// ...
+```ts
+import { ValocracyClient, WalletManager, WalletType } from '@karn_lat/protocol-sdk';
+
+const wallets = new WalletManager();
+await wallets.connect(WalletType.FREIGHTER);
+
+const valocracy = new ValocracyClient(
+  'Test SDF Network ; September 2015',
+  'https://soroban-testnet.stellar.org',
+  'C...'
+);
 ```

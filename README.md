@@ -194,6 +194,9 @@ stellar contract deploy \
 ### 💻 SDK
 - **[SDK Overview](docs/sdk/README.md)** - Client library
 - **[SDK Tests](docs/sdk/SDK_TESTS_IMPLEMENTATION.md)** - Implementation guide
+- **[Wallet Connect](docs/sdk/WALLET_CONNECT_GUIDE.md)** - Implementation guide
+
+> SDK lives alongside the core contracts; follow the SDK Overview link for packaging and wallet integration details rather than treating it as the primary protocol surface.
 
 ---
 

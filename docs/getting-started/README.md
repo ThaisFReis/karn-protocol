@@ -169,7 +169,7 @@ After registration, you'll see:
 ### Need Help?
 
 - **Documentation**: [Full User Guide](../../docs/)
-- **Discord**: [Karn Community](https://discord.gg/karn) (coming soon)
+- **Discord**: [Karn Community](https://discord.gg/vVFupt4JxN) (coming soon)
 - **Email**: support@karn.io
 
 ---
@@ -232,6 +232,8 @@ try {
 }
 ```
 
+For a fuller production-ready wallet context (mobile detection, reconnect, error handling) see the [Wallet Connection Guide](../../sdk/WALLET_CONNECT_GUIDE.md).
+
 ### Step 4: Query Mana and Level
 
 ```typescript
@@ -241,11 +243,7 @@ import * as StellarSdk from '@stellar/stellar-sdk';
 // Initialize client
 const client = new ValocracyClient({
   networkPassphrase: 'Test SDF Network ; September 2015',
-<<<<<<< HEAD
-  contractId: 'REDACTED_CONTRACT_ID_VALOCRACY',
-=======
-  contractId: 'CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"',
->>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
+  contractId: 'C... (replace with actual Valocracy contract ID)',
   rpcUrl: 'https://soroban-testnet.stellar.org',
 });
 
@@ -566,15 +564,9 @@ You can customize:
 
 | Contract | Address |
 |----------|---------|
-<<<<<<< HEAD
-| **Valocracy** | `REDACTED_CONTRACT_ID_VALOCRACY` |
-| **Governor** | `REDACTED_CONTRACT_ID_GOVERNOR` |
-| **Treasury** | `REDACTED_CONTRACT_ID_TREASURY` |
-=======
-| **Valocracy** | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` |
-| **Governor** | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` |
-| **Treasury** | `CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"` |
->>>>>>> 257583c5837a1af14efbaa2ea574613bd78df4b0
+| **Valocracy** | `C... (replace with Valocracy contract ID)` |
+| **Governor** | `C... (replace with Governor contract ID)` |
+| **Treasury** | `C... (replace with Treasury contract ID)` |
 
 ### Network Configuration
 
@@ -606,11 +598,6 @@ cd sdk && npm run build
 # Run SDK tests
 npm test
 
-# Start frontend dev server
-cd frontend && npm run dev
-
-# Start backend dev server
-cd backend && npm run dev
 ```
 
 ---

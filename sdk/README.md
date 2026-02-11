@@ -19,6 +19,10 @@ Includes:
 npm install @karn_lat/protocol-sdk
 ```
 
+## Documentation
+
+- [Wallet Connection Guide](../docs/sdk/WALLET_CONNECT_GUIDE.md)
+
 ## Requirements
 
 - ESM package (`"type": "module"`)

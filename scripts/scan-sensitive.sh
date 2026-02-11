@@ -48,6 +48,8 @@ EXCLUDE_DIRS=(
   '--exclude-dir=coverage'
   # Contains deterministic/synthetic addresses used by Soroban tests.
   '--exclude-dir=test_snapshots'
+  '--exclude-dir=frontend'
+  '--exclude-dir=templates'
 )
 
 # Notes:

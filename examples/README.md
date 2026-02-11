@@ -72,7 +72,7 @@ npm run dev
 ## Support
 
 - GitHub Issues: [github.com/karn-protocol/karn/issues](https://github.com/karn-protocol/karn/issues)
-- Discord: [Karn Community](https://discord.gg/karn) (coming soon)
+- Discord: [Karn Community](https://discord.gg/vVFupt4JxN) (coming soon)
 
 ---
 

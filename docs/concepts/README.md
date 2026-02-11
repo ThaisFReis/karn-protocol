@@ -839,4 +839,4 @@ await governor.createProposal(
 **Last Updated:** 2026-02-07
 **Version:** 1.0.0
 **Maintainer:** Karn Protocol Team
-**Questions?** Join our [Discord](https://discord.gg/karn) or read the [Whitepaper](./Whitepaper_Karn.md)
+**Questions?** Join our [Discord](https://discord.gg/vVFupt4JxN) or read the [Whitepaper](./Whitepaper_Karn.md)

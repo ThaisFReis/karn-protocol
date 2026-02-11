@@ -89,6 +89,7 @@
 | Document | Description |
 |----------|-------------|
 | [SDK Overview](sdk/README.md) | Client SDK documentation |
+| [Wallet Connection Guide](sdk/WALLET_CONNECT_GUIDE.md) | Production wallet connect flow |
 | [SDK Tests](sdk/SDK_TESTS_IMPLEMENTATION.md) | SDK test implementation |
 
 ### Concepts
@@ -116,8 +117,9 @@
 
 **Develop with SDK:**
 1. Read [SDK Overview](sdk/README.md)
-2. Review [SDK Tests](sdk/SDK_TESTS_IMPLEMENTATION.md)
-3. Check [Contract Reference](contracts/CONTRACT_REFERENCE.md)
+2. Follow [Wallet Connection Guide](sdk/WALLET_CONNECT_GUIDE.md)
+3. Review [SDK Tests](sdk/SDK_TESTS_IMPLEMENTATION.md)
+4. Check [Contract Reference](contracts/CONTRACT_REFERENCE.md)
 
 **Customize for my DAO:**
 1. Read [Protocol Adaptation Guide](guides/PROTOCOL_ADAPTATION_GUIDE.md)
